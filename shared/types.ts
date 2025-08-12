@@ -53,6 +53,37 @@ export interface ConversionParams {
   smooth?: boolean;
   autoCrop?: boolean;
   backgroundColor?: string;
+  
+  // AutoTrace specific
+  colorCount?: number;
+  despeckleLevel?: number;
+  errorThreshold?: number;
+  filterIterations?: number;
+  lineThreshold?: number;
+  tangentSurround?: number;
+  lineReversionThreshold?: number;
+  centerline?: boolean;
+  preserveWidth?: boolean;
+  removeAdjacentCorners?: boolean;
+  preprocessImage?: boolean;
+  
+  // Primitive specific
+  shapeCount?: number;
+  shapeType?: string;
+  iterations?: number;
+  alpha?: number;
+  background?: string;
+  resize?: number;
+  
+  // SVG Cleaner specific
+  precision?: number;
+  removeUnused?: boolean;
+  removeHidden?: boolean;
+  removeComments?: boolean;
+  removeMetadata?: boolean;
+  optimizePaths?: boolean;
+  mergeStyles?: boolean;
+  removeEmptyGroups?: boolean;
 }
 
 export interface QualityMetrics {

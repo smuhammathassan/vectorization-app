@@ -161,7 +161,7 @@ export default function UploadZone({
           border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
           ${isDragActive 
             ? 'border-blue-500 bg-blue-50 text-blue-700' 
-            : 'border-gray-300 hover:border-gray-400 text-gray-600'
+            : 'border-gray-300 hover:border-gray-400 text-gray-800'
           }
           ${isUploading ? 'pointer-events-none opacity-50' : ''}
         `}
@@ -171,10 +171,10 @@ export default function UploadZone({
         <p className="text-lg font-medium mb-2">
           {isDragActive ? 'Drop files here...' : 'Drop files here or click to browse'}
         </p>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-800 mb-4">
           Support for PNG, JPG, BMP, TIFF, WEBP up to {formatFileSize(maxSize)}
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-700">
           Maximum {maxFiles} files at once
         </p>
       </div>
@@ -233,7 +233,7 @@ export default function UploadZone({
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {fileObj.file.name}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-800">
                     {formatFileSize(fileObj.file.size)}
                     {fileObj.uploadedData && (
                       <span className="ml-2">
@@ -252,7 +252,7 @@ export default function UploadZone({
                             style={{ width: `${fileObj.progress}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500">{fileObj.progress}%</span>
+                        <span className="text-xs text-gray-700">{fileObj.progress}%</span>
                       </div>
                     )}
                     

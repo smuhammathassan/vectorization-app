@@ -115,79 +115,68 @@ export class InkscapeConverter implements IConverter {
       const outputId = generateId();
       const outputPath = path.resolve(__dirname, '../../outputs', `${outputId}.svg`);
 
-      // Build inkscape command for tracing
-      const args = [
-        '--export-type=svg',
-        '--export-filename=' + outputPath
-      ];
-
       // Configure tracing parameters based on mode
       const mode = params.inkscapeMode || 'brightnessCutoff';
+      const threshold = params.threshold || 0.45;
+      const colors = params.colors || 8;
+      const multipleScans = params.multipleScans || 1;
+      
+      let traceAction = '';
       
       switch (mode) {
         case 'brightnessCutoff':
-          args.push('--trace-bitmap');
-          if (params.threshold !== undefined) {
-            args.push(`--trace-bitmap-threshold=${params.threshold}`);
-          }
+          traceAction = `trace-bitmap:mode=brightness_cutoff,threshold=${threshold}`;
           break;
         
         case 'edgeDetection':
-          args.push('--trace-bitmap-edge');
+          traceAction = `trace-bitmap:mode=edge_detection`;
           break;
         
         case 'colorQuantization':
-          args.push('--trace-bitmap-colors');
-          if (params.colors !== undefined) {
-            args.push(`--trace-bitmap-colors=${params.colors}`);
-          }
+          traceAction = `trace-bitmap:mode=color_quantized,colors=${colors}`;
           break;
         
         case 'autotrace':
-          args.push('--trace-bitmap-autotrace');
+          traceAction = `trace-bitmap:mode=autotrace`;
           break;
         
         case 'centerline':
-          args.push('--trace-bitmap-centerline');
+          traceAction = `trace-bitmap:mode=centerline`;
           break;
       }
 
-      // Additional options
+      // Add additional options to action
       if (params.smooth) {
-        args.push('--trace-bitmap-smooth');
+        traceAction += ',smooth=true';
       }
 
       if (params.stack) {
-        args.push('--trace-bitmap-stack');
+        traceAction += ',stack=true';
       }
 
       if (params.removeBackground) {
-        args.push('--trace-bitmap-remove-background');
+        traceAction += ',remove_background=true';
       }
 
-      if (params.multipleScans && params.multipleScans > 1) {
-        args.push(`--trace-bitmap-scans=${params.multipleScans}`);
+      if (multipleScans > 1) {
+        traceAction += `,scans=${multipleScans}`;
       }
-
-      // Add input file
-      args.push(file.path);
 
       if (onProgress) onProgress(30);
 
-      // Execute inkscape
-      const command = `inkscape ${args.join(' ')}`;
+      // Modern Inkscape uses actions for bitmap tracing
+      const command = `inkscape --actions="${traceAction};export-filename:${outputPath};export-do" "${file.path}"`;
       console.log('Executing Inkscape command:', command);
       
       const { stdout, stderr } = await execAsync(command, {
         timeout: 60000 // 60 seconds timeout - Inkscape can take longer
       });
 
-      const result = { code: 0, stderr, stdout };
-
       if (onProgress) onProgress(80);
 
-      if (result.code !== 0) {
-        throw new Error(`Inkscape failed with code ${result.code}: ${result.stderr}`);
+      // Check for errors in stderr
+      if (stderr && stderr.includes('error')) {
+        throw new Error(`Inkscape error: ${stderr}`);
       }
 
       // Verify output file exists
@@ -203,10 +192,11 @@ export class InkscapeConverter implements IConverter {
       if (onProgress) onProgress(90);
 
       // Calculate quality metrics
+      const startTime = Date.now();
       const qualityMetrics = await this.calculateQualityMetrics(
         outputPath, 
         file, 
-        Date.now() - Date.now(),
+        Date.now() - startTime,
         params
       );
 

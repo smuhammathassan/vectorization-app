@@ -228,14 +228,14 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-        <span className="ml-2 text-gray-600">Loading conversion methods...</span>
+        <span className="ml-2 text-gray-900">Loading conversion methods...</span>
       </div>
     );
   }
 
   if (uploadedFiles.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-gray-800">
         <Upload className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p>Upload files to start converting</p>
       </div>
@@ -254,7 +254,7 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
         <h3 className="text-lg font-medium mb-4">Conversion Method</h3>
         
         <div className="mb-6">
-          <label htmlFor="method-select" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="method-select" className="block text-sm font-medium text-gray-900 mb-2">
             Select Conversion Method
           </label>
           <div className="text-xs text-blue-600 mb-1 font-mono">
@@ -308,7 +308,7 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h4 className="font-medium text-gray-900 text-lg">{selectedMethodObj.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{selectedMethodObj.description}</p>
+                <p className="text-sm text-gray-800 mt-1">{selectedMethodObj.description}</p>
               </div>
               <span className={`text-xs px-2 py-1 rounded ${
                 selectedMethodObj.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -319,26 +319,26 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
               <div className="text-center">
-                <span className="block text-xs text-gray-500">Speed</span>
+                <span className="block text-xs text-gray-700">Speed</span>
                 <span className="text-sm font-medium capitalize">{selectedMethodObj.performance.speed}</span>
               </div>
               <div className="text-center">
-                <span className="block text-xs text-gray-500">Quality</span>
+                <span className="block text-xs text-gray-700">Quality</span>
                 <span className="text-sm font-medium capitalize">{selectedMethodObj.performance.quality}</span>
               </div>
               <div className="text-center">
-                <span className="block text-xs text-gray-500">Memory</span>
+                <span className="block text-xs text-gray-700">Memory</span>
                 <span className="text-sm font-medium capitalize">{selectedMethodObj.performance.memoryUsage}</span>
               </div>
               <div className="text-center">
-                <span className="block text-xs text-gray-500">Category</span>
+                <span className="block text-xs text-gray-700">Category</span>
                 <span className="text-sm font-medium capitalize">{selectedMethodObj.category}</span>
               </div>
             </div>
             
             {selectedMethodObj.performance.bestFor.length > 0 && (
               <div>
-                <span className="text-xs text-gray-500">Best for: </span>
+                <span className="text-xs text-gray-700">Best for: </span>
                 <span className="text-xs text-gray-700">{selectedMethodObj.performance.bestFor.join(', ')}</span>
               </div>
             )}
@@ -349,14 +349,14 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
         {selectedMethodObj && selectedMethodObj.parameters.length > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center mb-3">
-              <Settings className="w-5 h-5 text-gray-500 mr-2" />
+              <Settings className="w-5 h-5 text-gray-700 mr-2" />
               <h4 className="font-medium text-gray-900">Parameters</h4>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {selectedMethodObj.parameters.map((param) => (
                 <div key={param.name}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     {param.label}
                   </label>
                   
@@ -403,11 +403,11 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
                         }))}
                         className="mr-2 focus:ring-blue-500 text-blue-600"
                       />
-                      <span className="text-sm text-gray-700">Enable</span>
+                      <span className="text-sm text-gray-900">Enable</span>
                     </label>
                   )}
                   
-                  <p className="text-xs text-gray-500 mt-1">{param.description}</p>
+                  <p className="text-xs text-gray-700 mt-1">{param.description}</p>
                 </div>
               ))}
             </div>
@@ -441,7 +441,7 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{file.originalName}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-800">
                         {file.metadata?.width}×{file.metadata?.height}
                       </p>
                     </div>
@@ -465,7 +465,7 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
                         <div key={job.id} className="flex items-center justify-between">
                           <div className="flex items-center">
                             {getStatusIcon(job.status)}
-                            <span className="ml-2 text-sm text-gray-600">
+                            <span className="ml-2 text-sm text-gray-900">
                               {methods.find(m => m.name === job.method)?.name || job.method}
                             </span>
                             <span className={`ml-2 px-2 py-1 text-xs rounded ${getStatusColor(job.status)}`}>
@@ -482,12 +482,12 @@ export default function ConversionPanel({ uploadedFiles }: ConversionPanelProps)
                                     style={{ width: `${job.progress}%` }}
                                   />
                                 </div>
-                                <span className="ml-2 text-xs text-gray-500">{job.progress}%</span>
+                                <span className="ml-2 text-xs text-gray-700">{job.progress}%</span>
                               </div>
                             )}
                             
                             {job.estimatedTime && job.status !== 'completed' && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-700">
                                 ~{formatDuration(job.estimatedTime)}
                               </span>
                             )}

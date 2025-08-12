@@ -10,9 +10,7 @@ import conversionRoutes from './routes/conversion';
 import methodRoutes from './routes/methods';
 import { errorHandler } from './middleware/errorHandler';
 import { initializeDatabase } from './config/database';
-import { ConversionService } from './services/ConversionService';
-import { VTracerConverter } from './converters/VTracerConverter';
-import { OpenCVConverter } from './converters/OpenCVConverter';
+import { getConversionService } from './services/ConversionServiceSingleton';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -75,12 +73,8 @@ async function startServer() {
     await initializeDatabase();
     console.log('Database initialized successfully');
 
-    // Initialize conversion service and register converters
-    const conversionService = new ConversionService();
-    conversionService.registerConverter(new VTracerConverter());
-    conversionService.registerConverter(new OpenCVConverter());
-    
-    console.log('Conversion service initialized with converters');
+    // Initialize conversion service singleton with all converters
+    const conversionService = getConversionService();
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

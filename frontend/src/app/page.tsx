@@ -28,7 +28,7 @@ export default function Home() {
                 </h1>
               </div>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-800">
               Raster to Vector Conversion
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function Home() {
                     <div className="text-2xl font-bold text-blue-600">
                       {uploadedFiles.length}
                     </div>
-                    <div className="text-sm text-gray-600">Files Uploaded</div>
+                    <div className="text-sm text-gray-800">Files Uploaded</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
@@ -110,7 +110,7 @@ export default function Home() {
                         : `${(uploadedFiles.reduce((sum, file) => sum + (file.size || 0), 0) / 1024).toFixed(0)}KB`
                       }
                     </div>
-                    <div className="text-sm text-gray-600">Total Size</div>
+                    <div className="text-sm text-gray-800">Total Size</div>
                   </div>
                 </div>
               </div>
@@ -129,7 +129,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h3 className="text-lg font-semibold mb-3 text-blue-600">VTracer</h3>
-              <p className="text-gray-600 mb-3">
+              <p className="text-gray-800 mb-3">
                 Modern full-color vectorization with advanced clustering algorithms. 
                 Perfect for complex images with multiple colors.
               </p>
@@ -142,7 +142,7 @@ export default function Home() {
 
             <div className="bg-white p-6 rounded-lg border shadow-sm">
               <h3 className="text-lg font-semibold mb-3 text-green-600">OpenCV</h3>
-              <p className="text-gray-600 mb-3">
+              <p className="text-gray-800 mb-3">
                 Contour-based vectorization with scientific precision. 
                 Ideal for line art, logos, and technical drawings.
               </p>
@@ -159,7 +159,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-gray-500 text-sm">
+          <div className="text-center text-gray-800 text-sm">
             <p>&copy; 2024 Vector Converter. Professional raster-to-vector conversion tool.</p>
           </div>
         </div>

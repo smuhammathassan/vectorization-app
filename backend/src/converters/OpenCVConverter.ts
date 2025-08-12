@@ -16,6 +16,7 @@ import { generateId } from '../../../shared/utils';
 const execAsync = promisify(exec);
 const writeFile = promisify(fs.writeFile);
 const stat = promisify(fs.stat);
+const mkdir = promisify(fs.mkdir);
 
 export class OpenCVConverter implements IConverter {
   name = 'opencv';
@@ -29,8 +30,8 @@ export class OpenCVConverter implements IConverter {
       name: 'threshold',
       type: 'number',
       label: 'Binary Threshold',
-      description: 'Binary threshold value (0-255, lower = more detail)',
-      default: 80,
+      description: 'Binary threshold value (0-255, higher = cleaner separation)',
+      default: 120,
       min: 0,
       max: 255,
       step: 1
@@ -147,7 +148,7 @@ export class OpenCVConverter implements IConverter {
 
       // Build Python command arguments with improved defaults
       const paramsJson = JSON.stringify({
-        threshold: params.threshold || 80,  // Lower default threshold for better detail
+        threshold: params.threshold !== undefined ? params.threshold : 120,  // Higher default threshold for better separation
         epsilon: params.epsilon || 1.0,     // Better epsilon for less aggressive simplification
         minArea: params.minArea || 50,      // Lower minimum area to capture more details
         colorMode: params.colorMode || 'binary',
@@ -246,7 +247,7 @@ export class OpenCVConverter implements IConverter {
     }
 
     const scriptDir = path.dirname(scriptPath);
-    await fs.promises.mkdir(scriptDir, { recursive: true });
+    await mkdir(scriptDir, { recursive: true });
 
     const pythonScript = `#!/usr/bin/env python3
 import cv2
@@ -289,7 +290,8 @@ def process_image(image_path, output_path, params):
     if params['colorMode'] == 'binary':
         # Convert to grayscale and threshold
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, binary = cv2.threshold(gray, params['threshold'], 255, cv2.THRESH_BINARY)
+        # Invert threshold to get black shapes on white background
+        _, binary = cv2.threshold(gray, params['threshold'], 255, cv2.THRESH_BINARY_INV)
         
         # Find contours
         contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -307,10 +309,12 @@ def process_image(image_path, output_path, params):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
         for threshold in range(64, 256, 64):
-            _, binary = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+            # Invert threshold for proper black shapes
+            _, binary = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
             contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             
-            gray_value = 255 - threshold
+            # Create proper grayscale colors (darker for lower thresholds)
+            gray_value = threshold // 4  # Scale to reasonable grayscale range
             color = f"rgb({gray_value},{gray_value},{gray_value})"
             
             for contour in contours:
@@ -324,12 +328,14 @@ def process_image(image_path, output_path, params):
         # Process each color channel
         for channel, color_name in enumerate(['blue', 'green', 'red']):
             channel_img = img[:, :, channel]
-            _, binary = cv2.threshold(channel_img, params['threshold'], 255, cv2.THRESH_BINARY)
+            # Invert threshold for proper color shapes
+            _, binary = cv2.threshold(channel_img, params['threshold'], 255, cv2.THRESH_BINARY_INV)
             
             contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             
+            # Create proper RGB colors (BGR to RGB conversion)
             color_values = [0, 0, 0]
-            color_values[2 - channel] = 255  # BGR to RGB
+            color_values[2 - channel] = 200  # Use 200 instead of 255 for better visibility
             color = f"rgb({color_values[0]},{color_values[1]},{color_values[2]})"
             
             for contour in contours:

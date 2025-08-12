@@ -1,0 +1,600 @@
+[0;34m🐛 Starting Vectorization App in DEBUG MODE[0m
+==============================================
+
+[0;34m🔪 Aggressively cleaning up ports...[0m
+[1;33mKilling processes on port 3000...[0m
+fuser: [-cfu] file ...
+	-c	file is treated as mount point
+	-f	the report is only for the named files
+	-u	print username of pid in parenthesis
+[0;32m✅ Port 3000 cleared[0m
+[1;33mKilling processes on port 3001...[0m
+fuser: [-cfu] file ...
+	-c	file is treated as mount point
+	-f	the report is only for the named files
+	-u	print username of pid in parenthesis
+[0;32m✅ Port 3001 cleared[0m
+[1;33mKilling processes on port 3002...[0m
+fuser: [-cfu] file ...
+	-c	file is treated as mount point
+	-f	the report is only for the named files
+	-u	print username of pid in parenthesis
+[0;32m✅ Port 3002 cleared[0m
+[1;33mKilling any remaining node processes...[0m
+
+[0;34m📂 Creating necessary directories...[0m
+
+[0;34m🚀 Starting Backend in DEBUG mode...[0m
+[0;32mBackend starting at: /Users/muhammadhassan/vectorization/vectorization-app/backend[0m
+[1;33mBackend will run on: http://localhost:3002[0m
+[1;33mAPI endpoints: http://localhost:3002/api/*[0m
+[0;32m✅ Backend PID: 6421[0m
+
+[1;33m⏳ Waiting 8 seconds for backend to fully start...[0m
+
+> backend@1.0.0 dev
+> nodemon --exec ts-node src/index.ts
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+
+[0;34m🏥 Testing backend endpoints...[0m
+[1;33mTesting /api/health...[0m
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    54  100    54    0     0   2256      0 --:--:-- --:--:-- --:--:--  2842
+{"status":"ok","timestamp":"2025-08-12T08:35:01.439Z"}::ffff:127.0.0.1 - - [12/Aug/2025:08:35:01 +0000] "GET /api/health HTTP/1.1" 200 54 "-" "curl/8.1.2"
+
+[0;32m✅ Backend health OK[0m
+
+[1;33mTesting /api/methods...[0m
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0Registered converter: vtracer
+Registered converter: opencv
+Registered converter: potrace
+Registered converter: inkscape
+Conversion service singleton initialized with all converters available
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+{"success":true,"data":[{"name":"vtracer","description":"VTracer - High-quality full-color vectorization with advanced clustering algorithms","category":"modern","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"colorPrecision","type":"number","label":"Color Precision","description":"Color precision (1-8, higher = more colors)","default":6,"min":1,"max":8,"step":1},{"name":"layerDifference","type":"number","label":"Layer Difference","description":"Layer difference threshold (0-255)","default":16,"min":0,"max":255,"step":1},{"name":"mode","type":"select","label":"Curve Mode","description":"Curve fitting mode","default":"spline","options":[{"value":"spline","label":"Spline (smooth curves)"},{"value":"polygon","label":"Polygon (straight lines)"},{"value":"none","label":"None (pixel perfect)"}]},{"name":"filterSpeckle","type":"number","label":"Filter Speckle","description":"Filter speckle areas smaller than this (pixels)","default":4,"min":0,"max":100,"step":1},{"name":"cornerThreshold","type":"number","label":"Corner Threshold","description":"Corner detection threshold (0-180 degrees)","default":60,"min":0,"max":180,"step":1},{"name":"lengthThreshold","type":"number","label":"Length Threshold","description":"Minimum path length","default":4,"min":0.1,"max":100,"step":0.1}],"performance":{"speed":"medium","quality":"excellent","memoryUsage":"medium","bestFor":["logos","illustrations","graphics","full-color images"]},"available":true,"requirements":["vtracer binary"]},{"name":"opencv","description":"OpenCV - Contour-based vectorization with scientific precision","category":"modern","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"threshold","type":"number","label":"Binary Threshold","description":"Binary threshold value (0-255, higher = cleaner separation)","default":120,"min":0,"max":255,"step":1},{"name":"epsilon","type":"number","label":"Contour Simplification","description":"Douglas-Peucker epsilon (lower = more detail, higher = smoother)","default":1,"min":0.1,"max":10,"step":0.1},{"name":"minArea","type":"number","label":"Minimum Area","description":"Minimum contour area to include (lower = more details)","default":50,"min":1,"max":10000,"step":1},{"name":"colorMode","type":"select","label":"Color Mode","description":"How to handle colors","default":"binary","options":[{"value":"binary","label":"Binary (black/white)"},{"value":"grayscale","label":"Grayscale levels"},{"value":"color","label":"Color separation"}]},{"name":"smooth","type":"boolean","label":"Smooth Contours","description":"Apply Gaussian smoothing before contour detection","default":true}],"performance":{"speed":"fast","quality":"good","memoryUsage":"low","bestFor":["line art","logos","simple graphics","technical drawings"]},"available":false,"requirements":["python3","opencv-python","numpy"]},{"name":"potrace","description":"Potrace - Traditional black and white vectorization with bitmap tracing","category":"traditional","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"threshold","type":"number","label":"Binary Threshold","description":"Threshold for black/white conversion (0-1)","default":0.5,"min":0,"max":1,"step":0.01},{"name":"turnPolicy","type":"select","label":"Turn Policy","description":"How to resolve ambiguities in path decomposition","default":"minority","options":[{"value":"black","label":"Black - prefer black pixels"},{"value":"white","label":"White - prefer white pixels"},{"value":"left","label":"Left - always take left turn"},{"value":"right","label":"Right - always take right turn"},{"value":"minority","label":"Minority - prefer minority color"},{"value":"majority","label":"Majority - prefer majority color"},{"value":"random","label":"Random - choose randomly"}]},{"name":"turdSize","type":"number","label":"Suppress Speckles","description":"Suppress speckles of up to this size (pixels)","default":2,"min":0,"max":100,"step":1},{"name":"alphaMax","type":"number","label":"Alpha 100  6274  100  6274    0     0   6924      0 --:--:-- --:--:-- --:--:--  6947::ffff:127.0.0.1 - - [12/Aug/2025:08:35:02 +0000] "GET /api/methods HTTP/1.1" 200 6274 "-" "curl/8.1.2"
+100  6274  100  6274    0     0   6923      0 --:--:-- --:--:-- --:--:--  6940
+Max","description":"Corner detection threshold (0-1.334, higher = smoother)","default":1,"min":0,"max":1.334,"step":0.01},{"name":"longCoding","type":"boolean","label":"Long Coding","description":"Turn on long coding optimization","default":false},{"name":"opttolerance","type":"number","label":"Optimization Tolerance","description":"Optimize tolerance for curve fitting","default":0.2,"min":0,"max":2,"step":0.01}],"performance":{"speed":"fast","quality":"good","memoryUsage":"low","bestFor":["line art","logos","black and white images","sketches","text"]},"available":true},{"name":"inkscape","description":"Inkscape - Professional vector graphics editor with advanced tracing","category":"external","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"inkscapeMode","type":"select","label":"Trace Mode","description":"Bitmap tracing algorithm","default":"brightnessCutoff","options":[{"value":"brightnessCutoff","label":"Brightness cutoff"},{"value":"edgeDetection","label":"Edge detection"},{"value":"colorQuantization","label":"Color quantization"},{"value":"autotrace","label":"Autotrace"},{"value":"centerline","label":"Centerline tracing"}]},{"name":"threshold","type":"number","label":"Threshold","description":"Brightness threshold (0.0-1.0)","default":0.45,"min":0,"max":1,"step":0.01},{"name":"colors","type":"number","label":"Colors","description":"Number of colors for quantization","default":8,"min":2,"max":32,"step":1},{"name":"smooth","type":"boolean","label":"Smooth","description":"Smooth corners of traces","default":true},{"name":"stack","type":"boolean","label":"Stack Scans","description":"Stack scans on top of each other","default":true},{"name":"removeBackground","type":"boolean","label":"Remove Background","description":"Remove background color","default":false},{"name":"multipleScans","type":"number","label":"Multiple Scans","description":"Number of brightness scans","default":1,"min":1,"max":32,"step":1}],"performance":{"speed":"slow","quality":"excellent","memoryUsage":"high","bestFor":["detailed artwork","photographs","complex illustrations","multi-color images"]},"available":true}]}
+[0;32m✅ Methods endpoint OK[0m
+
+[0;34m🚀 Starting Frontend in DEBUG mode...[0m
+[0;32mFrontend starting at: /Users/muhammadhassan/vectorization/vectorization-app/frontend[0m
+[1;33mFrontend will run on: http://localhost:3000[0m
+[1;33mAPI Proxy: http://localhost:3000/api/* -> http://localhost:3002/api/*[0m
+[0;32m✅ Frontend PID: 6529[0m
+
+[1;33m⏳ Waiting 10 seconds for frontend to fully start...[0m
+
+> frontend@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /Users/muhammadhassan/package-lock.json.
+   Consider removing the lockfiles at:
+   * /Users/muhammadhassan/vectorization/vectorization-app/frontend/package-lock.json
+
+   ▲ Next.js 15.4.6 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://10.191.1.75:3000
+
+ ✓ Starting...
+ ✓ Ready in 1168ms
+
+[0;34m🏥 Testing frontend and API proxy...[0m
+[1;33mTesting frontend root...[0m
+ ○ Compiling / ...
+ ✓ Compiled / in 1795ms
+ GET / 200 in 2027ms
+[0;32m✅ Frontend root OK[0m
+[1;33mTesting API proxy /api/health...[0m
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0::1 - - [12/Aug/2025:08:35:14 +0000] "GET /api/health HTTP/1.1" 200 54 "-" "curl/8.1.2"
+100    54  100    54    0     0   4433      0 --:--:-- --:--:-- --:--:--  6000
+{"status":"ok","timestamp":"2025-08-12T08:35:14.424Z"}
+[0;32m✅ API Proxy health OK[0m
+
+[1;33mTesting API proxy /api/methods...[0m
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+::1 - - [12/Aug/2025:08:35:15 +0000] "GET /api/methods HTTP/1.1" 200 6274 "-" "curl/8.1.2"
+{"success":true,"data":[{"name":"vtracer","description":"VTracer - High-quality full-color vectorization with advanced clustering algorithms","category":"modern","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"colorPrecision","type":"number","label":"Color Precision","description":"Color precision (1-8, higher = more colors)","default":6,"min":1,"max":8,"step":1},{"name":"layerDifference","type":"number","label":"Layer Difference","description":"Layer difference threshold (0-255)","default":16,"min":0,"max":255,"step":1},{"name":"mode","type":"select","label":"Curve Mode","description":"Curve fitting mode","default":"spline","options":[{"value":"spline","label":"Spline (smooth curves)"},{"value":"polygon","label":"Polygon (straight lines)"},{"value":"none","label":"None (pixel perfect)"}]},{"name":"filterSpeckle","type":"number","label":"Filter Speckle","description":"Filter speckle areas smaller than this (pixels)","default":4,"min":0,"max":100,"step":1},{"name":"cornerThreshold","type":"number","label":"Corner Threshold","description":"Corner detection threshold (0-180 degrees)","default":60,"min":0,"max":180,"step":1},{"name":"lengthThreshold","type":"number","label":"Length Threshold","description":"Minimum path length","default":4,"min":0.1,"max":100,"step":0.1}],"performance":{"speed":"medium","quality":"excellent","memoryUsage":"medium","bestFor":["logos","illustrations","graphics","full-color images"]},"available":true,"requirements":["vtracer binary"]},{"name":"opencv","description":"OpenCV - Contour-based vectorization with scientific precision","category":"modern","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"threshold","type":"number","label":"Binary Threshold","description":"Binary threshold value (0-255, higher = cleaner separation)","default":120,"min":0,"max":255,"step":1},{"name":"epsilon","type":"number","label":"Contour Simplification","description":"Douglas-Peucker epsilon (lower = more detail, higher = smoother)","default":1,"min":0.1,"max":10,"step":0.1},{"name":"minArea","type":"number","label":"Minimum Area","description":"Minimum contour area to include (lower = more details)","default":50,"min":1,"max":10000,"step":1},{"name":"colorMode","type":"select","label":"Color Mode","description":"How to handle colors","default":"binary","options":[{"value":"binary","label":"Binary (black/white)"},{"value":"grayscale","label":"Grayscale levels"},{"value":"color","label":"Color separation"}]},{"name":"smooth","type":"boolean","label":"Smooth Contours","description":"Apply Gaussian smoothing before contour detection","default":true}],"performance":{"speed":"fast","quality":"good","memoryUsage":"low","bestFor":["line art","logos","simple graphics","technical drawings"]},"available":false,"requirements":["python3","opencv-python","numpy"]},{"name":"potrace","description":"Potrace - Traditional black and white vectorization with bitmap tracing","category":"traditional","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"threshold","type":"number","label":"Binary Threshold","description":"Threshold for black/white conversion (0-1)","default":0.5,"min":0,"max":1,"step":0.01},{"name":"turnPolicy","type":"select","label":"Turn Policy","description":"How to resolve ambiguities in path decomposition","default":"minority","options":[{"value":"black","label":"Black - prefer black pixels"},{"value":"white","label":"White - prefer white pixels"},{"value":"left","label":"Left - always take left turn"},{"value":"right","label":"Right - always take right turn"},{"value":"minority","label":"Minority - prefer minority color"},{"value":"majority","label":"Majority - prefer majority color"},{"value":"random","label":"Random - choose randomly"}]},{"name":"turdSize","type":"number","label":"Suppress Speckles","description":"Suppress speckles of up to this size (pixels)","default":2,"min":0,"max":100,"step":1},{"name":"alphaMax","type":"number","label":"Alpha 100  6274  100  6274    0     0   9284      0 --:--:-- --:--:-- --:--:--  9308100  6274  100  6274    0     0   9282      0 --:--:-- --:--:-- --:--:--  9308
+Max","description":"Corner detection threshold (0-1.334, higher = smoother)","default":1,"min":0,"max":1.334,"step":0.01},{"name":"longCoding","type":"boolean","label":"Long Coding","description":"Turn on long coding optimization","default":false},{"name":"opttolerance","type":"number","label":"Optimization Tolerance","description":"Optimize tolerance for curve fitting","default":0.2,"min":0,"max":2,"step":0.01}],"performance":{"speed":"fast","quality":"good","memoryUsage":"low","bestFor":["line art","logos","black and white images","sketches","text"]},"available":true},{"name":"inkscape","description":"Inkscape - Professional vector graphics editor with advanced tracing","category":"external","supportedFormats":["image/png","image/jpeg","image/jpg","image/bmp","image/tiff"],"parameters":[{"name":"inkscapeMode","type":"select","label":"Trace Mode","description":"Bitmap tracing algorithm","default":"brightnessCutoff","options":[{"value":"brightnessCutoff","label":"Brightness cutoff"},{"value":"edgeDetection","label":"Edge detection"},{"value":"colorQuantization","label":"Color quantization"},{"value":"autotrace","label":"Autotrace"},{"value":"centerline","label":"Centerline tracing"}]},{"name":"threshold","type":"number","label":"Threshold","description":"Brightness threshold (0.0-1.0)","default":0.45,"min":0,"max":1,"step":0.01},{"name":"colors","type":"number","label":"Colors","description":"Number of colors for quantization","default":8,"min":2,"max":32,"step":1},{"name":"smooth","type":"boolean","label":"Smooth","description":"Smooth corners of traces","default":true},{"name":"stack","type":"boolean","label":"Stack Scans","description":"Stack scans on top of each other","default":true},{"name":"removeBackground","type":"boolean","label":"Remove Background","description":"Remove background color","default":false},{"name":"multipleScans","type":"number","label":"Multiple Scans","description":"Number of brightness scans","default":1,"min":1,"max":32,"step":1}],"performance":{"speed":"slow","quality":"excellent","memoryUsage":"high","bestFor":["detailed artwork","photographs","complex illustrations","multi-color images"]},"available":true}]}
+[0;32m✅ API Proxy methods OK[0m
+
+[0;32m🎉 DEBUG MODE READY![0m
+==============================================
+[0;34m🌐 URLs:[0m
+  Frontend:     http://localhost:3000
+  Backend:      http://localhost:3002
+  API Health:   http://localhost:3000/api/health
+  API Methods:  http://localhost:3000/api/methods
+
+[0;34m📊 Process Info:[0m
+  Backend PID:  6421
+  Frontend PID: 6529
+
+[1;33m🐛 DEBUG INSTRUCTIONS:[0m
+1. Open http://localhost:3000 in your browser
+2. Open browser DevTools (F12)
+3. Upload a file and try to convert
+4. Check console for any errors
+5. Check this terminal for server logs
+
+[0;31mTo stop: Press Ctrl+C or run: kill 6421 6529[0m
+
+[0;34m🔍 Monitoring... (Press Ctrl+C to stop)[0m
+::ffff:127.0.0.1 - - [12/Aug/2025:08:35:42 +0000] "GET /api/health HTTP/1.1" 200 54 "-" "curl/8.1.2"
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+::ffff:127.0.0.1 - - [12/Aug/2025:08:35:49 +0000] "GET /api/methods HTTP/1.1" 200 6274 "-" "curl/8.1.2"
+::1 - - [12/Aug/2025:08:35:55 +0000] "GET /api/health HTTP/1.1" 200 54 "-" "curl/8.1.2"
+ GET / 200 in 63ms
+ ✓ Compiled /favicon.ico in 242ms
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 497ms
+::1 - - [12/Aug/2025:08:36:46 +0000] "GET /api/methods HTTP/1.1" 200 6274 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:36:53 +0000] "POST /api/upload HTTP/1.1" 200 253 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:36:53 +0000] "GET /api/files/i5scustup5me8afja9/thumbnail HTTP/1.1" 200 2776139 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:37:05 +0000] "POST /api/convert HTTP/1.1" 200 210 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+Executing Inkscape command: inkscape --actions="trace-bitmap:mode=brightness_cutoff,threshold=0.45;export-filename:/Users/muhammadhassan/vectorization/vectorization-app/backend/outputs/9byev4uhho4me8aft1s.svg;export-do" "/Users/muhammadhassan/vectorization/vectorization-app/backend/uploads/dexy2sh6pb9me8afj9n_ChatGPT_Image_Aug_11_2025_05_05_28_PM.png"
+::1 - - [12/Aug/2025:08:37:06 +0000] "GET /api/convert/71rzql6as22me8aft1p/status HTTP/1.1" 200 200 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:37:07 +0000] "GET /api/convert/71rzql6as22me8aft1p/status HTTP/1.1" 200 241 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:37:09 +0000] "GET /api/convert/71rzql6as22me8aft1p/result HTTP/1.1" 200 3946129 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+ GET / 200 in 141ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+::1 - - [12/Aug/2025:08:43:59 +0000] "GET /api/methods HTTP/1.1" 200 6274 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:44:06 +0000] "POST /api/upload HTTP/1.1" 200 253 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:44:06 +0000] "GET /api/files/ust2lut4eame8aotdo/thumbnail HTTP/1.1" 200 2776139 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+ ✓ Compiled in 129ms
+ ✓ Compiled in 133ms
+ ✓ Compiled in 40ms
+ ✓ Compiled in 41ms
+ ✓ Compiled in 37ms
+ ✓ Compiled in 21ms
+ GET / 200 in 298ms
+ GET / 200 in 65ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 237ms
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+::1 - - [12/Aug/2025:08:50:29 +0000] "GET /api/methods HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:50:35 +0000] "POST /api/upload HTTP/1.1" 200 254 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:08:50:35 +0000] "GET /api/files/sqa3wde674nme8ax60e/thumbnail HTTP/1.1" 200 2776139 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/services/ConversionServiceSingleton.ts(24,49): error TS2345: Argument of type 'SVGCleanerConverter' is not assignable to parameter of type 'IConverter'.
+  Types of property 'category' are incompatible.
+    Type '"utility"' is not assignable to type '"traditional" | "modern" | "ai" | "external"'.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [ 2345 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/AutoTraceConverter.ts(135,18): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(136,42): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(140,18): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(141,46): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(150,18): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(151,46): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(155,18): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(156,48): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(160,18): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(161,45): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(165,18): error TS2339: Property 'centerline' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(170,18): error TS2339: Property 'preserveWidth' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(284,18): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(284,43): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(286,18): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(286,45): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,16): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,52): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,77): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,16): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,56): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,85): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,16): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,56): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,87): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,16): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,58): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,89): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(331,16): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(331,55): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(331,85): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(344,16): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(344,37): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(345,16): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(345,43): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(346,16): error TS2339: Property 'centerline' does not exist on type 'ConversionParams'.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2551, 2551,
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2551, 2551,
+    2551, 2339, 2339, 2339, 2339,
+    2339
+  ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/AutoTraceConverter.ts(135,11): error TS7053: Element implicitly has an 'any' type because expression of type '"colorCount"' can't be used to index type 'ConversionParams'.
+  Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(136,35): error TS7053: Element implicitly has an 'any' type because expression of type '"colorCount"' can't be used to index type 'ConversionParams'.
+  Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(140,11): error TS7053: Element implicitly has an 'any' type because expression of type '"despeckleLevel"' can't be used to index type 'ConversionParams'.
+  Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(141,39): error TS7053: Element implicitly has an 'any' type because expression of type '"despeckleLevel"' can't be used to index type 'ConversionParams'.
+  Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(150,11): error TS7053: Element implicitly has an 'any' type because expression of type '"errorThreshold"' can't be used to index type 'ConversionParams'.
+  Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(151,39): error TS7053: Element implicitly has an 'any' type because expression of type '"errorThreshold"' can't be used to index type 'ConversionParams'.
+  Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(155,11): error TS7053: Element implicitly has an 'any' type because expression of type '"filterIterations"' can't be used to index type 'ConversionParams'.
+  Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(156,41): error TS7053: Element implicitly has an 'any' type because expression of type '"filterIterations"' can't be used to index type 'ConversionParams'.
+  Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(160,18): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(161,45): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(165,11): error TS7053: Element implicitly has an 'any' type because expression of type '"centerline"' can't be used to index type 'ConversionParams'.
+  Property 'centerline' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(170,11): error TS7053: Element implicitly has an 'any' type because expression of type '"preserveWidth"' can't be used to index type 'ConversionParams'.
+  Property 'preserveWidth' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(284,18): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(284,43): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(286,18): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(286,45): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,16): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,52): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(311,77): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,16): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,56): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(315,85): error TS2339: Property 'despeckleLevel' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,16): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,56): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(323,87): error TS2339: Property 'errorThreshold' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,16): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,58): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(327,89): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(331,16): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(331,55): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(331,85): error TS2551: Property 'lineThreshold' does not exist on type 'ConversionParams'. Did you mean 'threshold'?
+src/converters/AutoTraceConverter.ts(344,16): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(344,37): error TS2339: Property 'colorCount' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(345,16): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(345,43): error TS2339: Property 'filterIterations' does not exist on type 'ConversionParams'.
+src/converters/AutoTraceConverter.ts(346,16): error TS2339: Property 'centerline' does not exist on type 'ConversionParams'.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [
+    7053, 7053, 7053, 7053, 7053,
+    7053, 7053, 7053, 2551, 2551,
+    7053, 7053, 2339, 2339, 2339,
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2339, 2339,
+    2339, 2339, 2339, 2551, 2551,
+    2551, 2339, 2339, 2339, 2339,
+    2339
+  ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/PrimitiveConverter.ts(95,5): error TS2322: Type '"artistic"' is not assignable to type '"excellent" | "basic" | "good"'.
+src/converters/PrimitiveConverter.ts(509,11): error TS2554: Expected 3 arguments, but got 2.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [ 2322, 2554 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/PrimitiveConverter.ts(509,11): error TS2554: Expected 3 arguments, but got 2.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [ 2554 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/SVGCleanerConverter.ts(86,5): error TS2322: Type '"optimization"' is not assignable to type '"excellent" | "basic" | "good"'.
+src/converters/SVGCleanerConverter.ts(277,9): error TS2353: Object literal may only specify known properties, and 'originalSize' does not exist in type 'QualityMetrics'.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [ 2322, 2353 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/converters/SVGCleanerConverter.ts(277,9): error TS2353: Object literal may only specify known properties, and 'originalSize' does not exist in type 'QualityMetrics'.
+
+    at createTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1617:30)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1427:10)
+    at Object.require.extensions.<computed> [as .ts] (/Users/muhammadhassan/vectorization/vectorization-app/backend/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1206:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1022:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19) {
+  diagnosticCodes: [ 2353 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+Registered converter: vtracer
+Registered converter: opencv
+Registered converter: potrace
+Registered converter: inkscape
+Registered converter: autotrace
+Registered converter: primitive
+Registered converter: svg-cleaner
+Conversion service singleton initialized with all converters available
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+AutoTrace not available: Command failed: autotrace --version
+/bin/sh: autotrace: command not found
+
+Primitive not available: Command failed: python -c "import PIL, numpy, random; print('Primitive dependencies available')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'PIL'
+
+::ffff:127.0.0.1 - - [12/Aug/2025:09:03:31 +0000] "GET /api/methods HTTP/1.1" 200 11243 "-" "curl/8.1.2"
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'cv2'
+
+AutoTrace not available: Command failed: autotrace --version
+/bin/sh: autotrace: command not found
+
+Primitive not available: Command failed: python -c "import PIL, numpy, random; print('Primitive dependencies available')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'PIL'
+
+::ffff:127.0.0.1 - - [12/Aug/2025:09:03:46 +0000] "GET /api/methods HTTP/1.1" 200 11243 "-" "curl/8.1.2"
+ GET / 200 in 2509ms
+ GET / 200 in 209ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 384ms
+OpenCV not available: Command failed: python -c "import cv2, numpy; print(f\"OpenCV {cv2.__version__}, NumPy {numpy.__version__}\")"
+
+::1 - - [12/Aug/2025:09:28:28 +0000] "POST /api/upload HTTP/1.1" 200 219 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+AutoTrace not available: Command failed: autotrace --version
+
+::1 - - [12/Aug/2025:09:28:30 +0000] "GET /api/methods HTTP/1.1" 200 11242 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:09:28:30 +0000] "GET /api/files/ex5dqopm0lnme8c9vm0/thumbnail HTTP/1.1" 200 57117 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:09:28:48 +0000] "POST /api/convert HTTP/1.1" 200 210 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+Executing VTracer command: vtracer --input "/Users/muhammadhassan/vectorization/vectorization-app/backend/uploads/fiupuryhejrme8c9vl7_PW7-Logo.png" --output "/Users/muhammadhassan/vectorization/vectorization-app/backend/outputs/oecimujii9me8caayl.svg"
+::1 - - [12/Aug/2025:09:28:49 +0000] "GET /api/convert/dz5rrihxtsome8caaye/status HTTP/1.1" 200 241 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:09:28:50 +0000] "GET /api/convert/dz5rrihxtsome8caaye/result HTTP/1.1" 200 171517 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+::1 - - [12/Aug/2025:09:30:45 +0000] "POST /api/convert HTTP/1.1" 200 223 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+Executing VTracer command: vtracer --input "/Users/muhammadhassan/vectorization/vectorization-app/backend/uploads/fiupuryhejrme8c9vl7_PW7-Logo.png" --output "/Users/muhammadhassan/vectorization/vectorization-app/backend/outputs/lowrxbjckyme8cct2o.svg" --mode none
+VTracer conversion error: Error: Command failed: vtracer --input "/Users/muhammadhassan/vectorization/vectorization-app/backend/uploads/fiupuryhejrme8c9vl7_PW7-Logo.png" --output "/Users/muhammadhassan/vectorization/vectorization-app/backend/outputs/lowrxbjckyme8cct2o.svg" --mode none
+thread 'main' panicked at 'Parser Error: Curve fitting mode is invalid: none', /Users/muhammadhassan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/vtracer-0.6.3/src/main.rs:167:13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+    at genericNodeError (node:internal/errors:984:15)
+    at wrappedFn (node:internal/errors:538:14)
+    at ChildProcess.exithandler (node:child_process:422:12)
+    at ChildProcess.emit (node:events:518:28)
+    at ChildProcess.emit (node:domain:488:12)
+    at maybeClose (node:internal/child_process:1105:16)
+    at Socket.<anonymous> (node:internal/child_process:457:11)
+    at Socket.emit (node:events:518:28)
+    at Socket.emit (node:domain:488:12)
+    at Pipe.<anonymous> (node:net:337:12) {
+  code: 101,
+  killed: false,
+  signal: null,
+  cmd: 'vtracer --input "/Users/muhammadhassan/vectorization/vectorization-app/backend/uploads/fiupuryhejrme8c9vl7_PW7-Logo.png" --output "/Users/muhammadhassan/vectorization/vectorization-app/backend/outputs/lowrxbjckyme8cct2o.svg" --mode none',
+  stdout: '',
+  stderr: "thread 'main' panicked at 'Parser Error: Curve fitting mode is invalid: none', /Users/muhammadhassan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/vtracer-0.6.3/src/main.rs:167:13\n" +
+    'note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n'
+}
+::1 - - [12/Aug/2025:09:30:46 +0000] "GET /api/convert/1qtakgvci01me8cct2l/status HTTP/1.1" 200 760 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts`[39m
+Database tables created successfully
+Database initialized successfully
+Registered converter: vtracer
+Registered converter: opencv
+Conversion service initialized with converters
+Server running on port 3002
+Health check: http://localhost:3002/api/health
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[?25h

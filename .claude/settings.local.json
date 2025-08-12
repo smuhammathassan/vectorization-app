@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/setup.sh:*)",
+      "Bash(vtracer:*)",
+      "Bash(python3:*)",
+      "Bash(potrace --version)",
+      "Bash(inkscape:*)",
+      "Bash(brew install:*)",
+      "Bash(brew list:*)",
+      "Bash(HOMEBREW_NO_AUTO_UPDATE=1 brew install potrace inkscape)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(pip3:*)",
+      "Bash(brew search:*)",
+      "Bash(autotrace:*)",
+      "Bash(npm start)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(kill:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  }
+}

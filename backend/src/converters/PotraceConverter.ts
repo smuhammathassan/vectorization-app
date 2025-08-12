@@ -109,45 +109,70 @@ export class PotraceConverter implements IConverter {
     try {
       if (onProgress) onProgress(10);
 
-      // Generate output filename
+      // Generate temporary and output filenames
       const outputId = generateId();
       const outputPath = path.resolve(__dirname, '../../outputs', `${outputId}.svg`);
+      const tempBmpPath = path.resolve(__dirname, '../../temp', `${outputId}.bmp`);
 
-      // Build potrace command
-      const args = [
-        '--svg',
-        '--output', outputPath
-      ];
+      // Ensure temp directory exists
+      await fs.mkdir(path.dirname(tempBmpPath), { recursive: true });
 
-      // Add parameters
+      if (onProgress) onProgress(20);
+
+      // Potrace needs bitmap input - convert image to BMP first
+      const convertToBmpCommand = `convert "${file.path}" "${tempBmpPath}"`;
+      
+      try {
+        await execAsync(convertToBmpCommand, { timeout: 30000 });
+      } catch (convertError) {
+        // If ImageMagick convert is not available, try with Python/PIL as fallback
+        const pythonConvert = `python3 -c "
+from PIL import Image
+img = Image.open('${file.path}')
+if img.mode != 'RGB':
+    img = img.convert('RGB')
+img.save('${tempBmpPath}', 'BMP')
+"`;
+        await execAsync(pythonConvert, { timeout: 30000 });
+      }
+
+      if (onProgress) onProgress(40);
+
+      // Build potrace command with corrected parameter names
+      const args = ['-s']; // SVG output format
+
+      // Add parameters with correct flag names
       if (params.threshold !== undefined) {
-        args.push('--threshold', params.threshold.toString());
+        args.push('-k', params.threshold.toString()); // -k for threshold, not --threshold
       }
 
       if (params.turnPolicy) {
-        args.push('--turnpolicy', params.turnPolicy);
+        args.push('-P', params.turnPolicy); // -P for turn policy
       }
 
       if (params.turdSize !== undefined) {
-        args.push('--turdsize', params.turdSize.toString());
+        args.push('-t', params.turdSize.toString()); // -t for turd size
       }
 
       if (params.alphaMax !== undefined) {
-        args.push('--alphamax', params.alphaMax.toString());
+        args.push('-a', params.alphaMax.toString()); // -a for alpha max
       }
 
       if (params.longCoding) {
-        args.push('--longcoding');
+        args.push('-L'); // -L for long coding
       }
 
       if (params.opttolerance !== undefined) {
-        args.push('--opttolerance', params.opttolerance.toString());
+        args.push('-O', params.opttolerance.toString()); // -O for optimization tolerance
       }
 
-      // Add input file
-      args.push(file.path);
+      // Output file
+      args.push('-o', outputPath);
 
-      if (onProgress) onProgress(30);
+      // Input file (must be last)
+      args.push(tempBmpPath);
+
+      if (onProgress) onProgress(50);
 
       // Execute potrace
       const command = `potrace ${args.join(' ')}`;
@@ -157,12 +182,18 @@ export class PotraceConverter implements IConverter {
         timeout: 30000 // 30 seconds timeout
       });
 
-      const result = { code: 0, stderr };
-
       if (onProgress) onProgress(80);
 
-      if (result.code !== 0) {
-        throw new Error(`Potrace failed with code ${result.code}: ${result.stderr}`);
+      // Clean up temporary file
+      try {
+        await fs.unlink(tempBmpPath);
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      // Check for errors in stderr
+      if (stderr && stderr.includes('error')) {
+        throw new Error(`Potrace error: ${stderr}`);
       }
 
       // Verify output file exists
@@ -178,10 +209,11 @@ export class PotraceConverter implements IConverter {
       if (onProgress) onProgress(90);
 
       // Calculate quality metrics
+      const startTime = Date.now();
       const qualityMetrics = await this.calculateQualityMetrics(
         outputPath, 
         file, 
-        Date.now() - Date.now(),
+        Date.now() - startTime,
         params
       );
 
