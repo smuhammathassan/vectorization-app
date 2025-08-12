@@ -12,6 +12,7 @@ import {
 } from '../../../shared/types';
 import { IConverter } from './IConverter';
 import { generateId } from '../../../shared/utils';
+import { generateColorProfileMetadata, generateSVGColor, hexToRgb, ColorSpace } from '../../../shared/colorUtils';
 
 const execAsync = promisify(exec);
 const writeFile = promisify(fs.writeFile);
@@ -69,6 +70,19 @@ export class OpenCVConverter implements IConverter {
       ]
     },
     {
+      name: 'colorSpace',
+      type: 'select',
+      label: 'Color Space',
+      description: 'Output color space for the vectorized result',
+      default: 'auto',
+      options: [
+        { value: 'auto', label: 'Auto (recommended based on image)' },
+        { value: 'rgb', label: 'RGB (digital/screen use)' },
+        { value: 'cmyk', label: 'CMYK (print use)' },
+        { value: 'grayscale', label: 'Grayscale (monochrome)' }
+      ]
+    },
+    {
       name: 'smooth',
       type: 'boolean',
       label: 'Smooth Contours',
@@ -120,6 +134,13 @@ export class OpenCVConverter implements IConverter {
       const validModes = ['binary', 'grayscale', 'color'];
       if (!validModes.includes(params.colorMode)) {
         errors.push(`Color mode must be one of: ${validModes.join(', ')}`);
+      }
+    }
+
+    if (params.colorSpace !== undefined) {
+      const validColorSpaces = ['rgb', 'cmyk', 'grayscale', 'auto'];
+      if (!validColorSpaces.includes(params.colorSpace)) {
+        errors.push('Color space must be one of: rgb, cmyk, grayscale, auto');
       }
     }
 

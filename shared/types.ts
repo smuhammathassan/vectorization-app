@@ -17,6 +17,7 @@ export interface ConversionJob {
 export interface ConversionParams {
   // Common parameters
   colorMode?: 'binary' | 'color' | 'grayscale';
+  colorSpace?: 'rgb' | 'cmyk' | 'grayscale' | 'auto';
   outputFormat?: 'svg' | 'pdf' | 'eps' | 'ai';
   
   // VTracer specific

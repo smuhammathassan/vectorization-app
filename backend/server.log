@@ -10,4 +10,4 @@ Registered converter: svg-cleaner
 Conversion service singleton initialized with all converters available
 Server running on port 3002
 Health check: http://localhost:3002/api/health
-::ffff:127.0.0.1 - - [12/Aug/2025:13:05:38 +0000] "GET /api/methods HTTP/1.1" 200 12272 "-" "curl/8.1.2"
+::ffff:127.0.0.1 - - [12/Aug/2025:13:24:08 +0000] "GET /api/methods HTTP/1.1" 200 13524 "-" "curl/8.1.2"

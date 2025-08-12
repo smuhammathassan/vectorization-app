@@ -10,6 +10,7 @@ import { IConverter } from './IConverter';
 import { FileUpload, ConversionParams, QualityMetrics, ConversionResult, PerformanceInfo, ParameterDefinition } from '../../../shared/types';
 import { generateId } from '../../../shared/utils';
 import { SVGCleanerConverter } from './SVGCleanerConverter';
+import { generateColorProfileMetadata, generateSVGColor, optimizeColorsForSpace, hexToRgb, rgbToHex, getRecommendedColorSpace, ColorSpace } from '../../../shared/colorUtils';
 
 const statAsync = promisify(stat);
 
@@ -129,6 +130,26 @@ export class AutoTraceConverter implements IConverter {
       label: 'Preprocess Large Images',
       description: 'Automatically downscale and smooth large images to reduce output complexity',
       default: true
+    },
+    {
+      name: 'colorSpace',
+      type: 'select',
+      label: 'Color Space',
+      description: 'Output color space for the vectorized result',
+      default: 'auto',
+      options: [
+        { value: 'auto', label: 'Auto (recommended based on image)' },
+        { value: 'rgb', label: 'RGB (digital/screen use)' },
+        { value: 'cmyk', label: 'CMYK (print use)' },
+        { value: 'grayscale', label: 'Grayscale (monochrome)' }
+      ]
+    },
+    {
+      name: 'backgroundColor',
+      type: 'string',
+      label: 'Background Color',
+      description: 'Background color to ignore during tracing (hex format, e.g., #FFFFFF)',
+      default: ''
     }
   ];
 
@@ -222,6 +243,15 @@ export class AutoTraceConverter implements IConverter {
         args.push('-remove-adjacent-corners');
       }
       
+      // Background color
+      if (params.backgroundColor && params.backgroundColor.length > 0) {
+        // Remove # if present and validate hex
+        const bgColor = params.backgroundColor.replace('#', '').toUpperCase();
+        if (/^[0-9A-F]{6}$/i.test(bgColor)) {
+          args.push('-background-color', bgColor);
+        }
+      }
+      
       // Centerline tracing
       if (params.centerline) {
         args.push('-centerline');
@@ -280,6 +310,15 @@ export class AutoTraceConverter implements IConverter {
         }
       } catch (error) {
         console.warn('SVG post-processing failed, using original:', error);
+      }
+
+      // Apply color space transformations
+      if (params.colorSpace && params.colorSpace !== 'auto') {
+        try {
+          finalOutputPath = await this.applyColorSpaceTransformation(finalOutputPath, params.colorSpace, params);
+        } catch (error) {
+          console.warn('Color space transformation failed:', error);
+        }
       }
 
       if (onProgress) onProgress(95);
@@ -380,6 +419,85 @@ export class AutoTraceConverter implements IConverter {
         accuracy: 0,
         smoothness: 0
       };
+    }
+  }
+
+  private async applyColorSpaceTransformation(
+    svgPath: string, 
+    targetColorSpace: ColorSpace,
+    params: ConversionParams
+  ): Promise<string> {
+    try {
+      // Read SVG content
+      const svgContent = await fs.readFile(svgPath, 'utf8');
+      
+      // Generate color profile metadata
+      const colorProfileMetadata = generateColorProfileMetadata(targetColorSpace);
+      
+      // Extract and transform colors in the SVG
+      let transformedContent = svgContent;
+      
+      // Add color profile metadata after the SVG opening tag
+      transformedContent = transformedContent.replace(
+        /(<svg[^>]*>)/,
+        `$1\n${colorProfileMetadata}`
+      );
+      
+      // Transform fill and stroke colors
+      const colorRegex = /(fill|stroke)="([^"]+)"/g;
+      transformedContent = transformedContent.replace(colorRegex, (match, attribute, color) => {
+        if (color === 'none' || color === 'transparent') {
+          return match;
+        }
+        
+        // Parse hex colors
+        const rgbColor = hexToRgb(color);
+        if (rgbColor) {
+          const transformedColor = generateSVGColor(rgbColor, targetColorSpace);
+          return `${attribute}="${transformedColor}"`;
+        }
+        
+        return match;
+      });
+      
+      // Transform style attribute colors
+      const styleRegex = /style="([^"]*)"/g;
+      transformedContent = transformedContent.replace(styleRegex, (match, style) => {
+        let transformedStyle = style;
+        
+        // Transform fill and stroke in style attributes
+        const styleFillRegex = /(fill|stroke):\s*([^;]+)/g;
+        transformedStyle = transformedStyle.replace(styleFillRegex, (styleMatch: string, prop: string, value: string) => {
+          const cleanValue = value.trim();
+          if (cleanValue === 'none' || cleanValue === 'transparent') {
+            return styleMatch;
+          }
+          
+          const rgbColor = hexToRgb(cleanValue);
+          if (rgbColor) {
+            const transformedColor = generateSVGColor(rgbColor, targetColorSpace);
+            return `${prop}: ${transformedColor}`;
+          }
+          
+          return styleMatch;
+        });
+        
+        return `style="${transformedStyle}"`;
+      });
+      
+      // Generate output path for color space transformed SVG
+      const outputId = generateId();
+      const transformedPath = path.resolve(__dirname, '../../outputs', `${outputId}_${targetColorSpace}.svg`);
+      
+      // Write transformed SVG
+      await fs.writeFile(transformedPath, transformedContent, 'utf8');
+      
+      console.log(`Applied ${targetColorSpace} color space transformation`);
+      return transformedPath;
+      
+    } catch (error) {
+      console.warn('Color space transformation error:', error);
+      return svgPath; // Return original if transformation fails
     }
   }
 
@@ -504,6 +622,20 @@ export class AutoTraceConverter implements IConverter {
     
     if (params.lineReversionThreshold !== undefined && (params.lineReversionThreshold < 0.01 || params.lineReversionThreshold > 1.0)) {
       errors.push('Line reversion threshold must be between 0.01 and 1.0');
+    }
+    
+    if (params.colorSpace !== undefined) {
+      const validColorSpaces = ['rgb', 'cmyk', 'grayscale', 'auto'];
+      if (!validColorSpaces.includes(params.colorSpace)) {
+        errors.push('Color space must be one of: rgb, cmyk, grayscale, auto');
+      }
+    }
+    
+    if (params.backgroundColor !== undefined && params.backgroundColor.length > 0) {
+      const cleanBg = params.backgroundColor.replace('#', '');
+      if (!/^[0-9A-Fa-f]{6}$/i.test(cleanBg)) {
+        errors.push('Background color must be a valid hex color (e.g., #FFFFFF or FFFFFF)');
+      }
     }
     
     // File size warnings

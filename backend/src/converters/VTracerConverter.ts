@@ -86,6 +86,19 @@ export class VTracerConverter implements IConverter {
       min: 0.1,
       max: 100.0,
       step: 0.1
+    },
+    {
+      name: 'colorSpace',
+      type: 'select',
+      label: 'Color Space',
+      description: 'Output color space for the vectorized result',
+      default: 'auto',
+      options: [
+        { value: 'auto', label: 'Auto (recommended based on image)' },
+        { value: 'rgb', label: 'RGB (digital/screen use)' },
+        { value: 'cmyk', label: 'CMYK (print use)' },
+        { value: 'grayscale', label: 'Grayscale (monochrome)' }
+      ]
     }
   ];
 
@@ -146,6 +159,13 @@ export class VTracerConverter implements IConverter {
 
     if (params.lengthThreshold !== undefined && params.lengthThreshold <= 0) {
       errors.push('Length threshold must be positive');
+    }
+
+    if (params.colorSpace !== undefined) {
+      const validColorSpaces = ['rgb', 'cmyk', 'grayscale', 'auto'];
+      if (!validColorSpaces.includes(params.colorSpace)) {
+        errors.push('Color space must be one of: rgb, cmyk, grayscale, auto');
+      }
     }
 
     return errors;
