@@ -1,0 +1,1359 @@
+openapi: 3.0.3
+info:
+  title: Raster-to-Vector API
+  description: |
+    Enterprise-grade raster-to-vector conversion API that transforms images into scalable vector formats.
+    
+    ## Overview
+    Convert PNG, JPEG, BMP, and TIFF images to high-quality SVG vectors using multiple vectorization engines including VTracer, OpenCV, Potrace, Inkscape, AutoTrace, Primitive, and SVGCleaner.
+    
+    ## Features
+    - Multiple vectorization algorithms for different use cases
+    - Asynchronous job processing with status tracking
+    - Batch conversion support
+    - Comprehensive parameter customization
+    - File management with metadata extraction
+    - Production-ready error handling
+    
+    ## Base URL
+    ```
+    https://api.yourservice.com/v1
+    ```
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://yourservice.com/support
+    email: support@yourservice.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://yourservice.com/terms
+
+servers:
+  - url: https://api.yourservice.com/v1
+    description: Production server
+  - url: http://localhost:3002/api
+    description: Development server
+
+paths:
+  # File Management Endpoints
+  /files:
+    get:
+      summary: List uploaded files
+      description: Retrieve a paginated list of uploaded files
+      operationId: listFiles
+      tags:
+        - Files
+      parameters:
+        - name: limit
+          in: query
+          description: Number of files to return (1-100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination (base64 encoded)
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [uploaded_at, original_name, size]
+            default: uploaded_at
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - $ref: '#/components/parameters/X-Request-Id'
+      responses:
+        '200':
+          description: Paginated list of files
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFilesResponse'
+        '400':
+          description: Invalid pagination parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  
+    post:
+      summary: Upload a single file
+      description: Upload an image file for vectorization
+      operationId: uploadFile
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file to upload (PNG, JPEG, BMP, TIFF)
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '400':
+          description: Invalid file or missing file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Upload processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /files/batch:
+    post:
+      summary: Upload multiple files
+      description: Upload multiple image files for batch processing
+      operationId: uploadBatchFiles
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Array of image files to upload
+      responses:
+        '200':
+          description: Files uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchFileUploadResponse'
+        '400':
+          description: Invalid files or no files provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /files/{fileId}:
+    get:
+      summary: Get file information
+      description: Retrieve metadata and information about an uploaded file
+      operationId: getFileInfo
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Unique identifier of the file
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File information retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfoResponse'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete file
+      description: Delete an uploaded file and its metadata
+      operationId: deleteFile
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Unique identifier of the file
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /files/{fileId}/download:
+    get:
+      summary: Download file
+      description: Download the original uploaded file
+      operationId: downloadFile
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Unique identifier of the file
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /files/{fileId}/thumbnail:
+    get:
+      summary: Get file thumbnail
+      description: Get a thumbnail of the uploaded image
+      operationId: getFileThumbnail
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Unique identifier of the file
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thumbnail image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Vectorization Methods
+  /methods:
+    get:
+      summary: Get all vectorization methods
+      description: Retrieve information about all available vectorization methods
+      operationId: getAllMethods
+      tags:
+        - Methods
+      responses:
+        '200':
+          description: List of available vectorization methods
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodsResponse'
+  
+  /methods/{methodId}:
+    get:
+      summary: Get method information
+      description: Retrieve detailed information about a specific vectorization method
+      operationId: getMethodInfo
+      tags:
+        - Methods
+      parameters:
+        - name: methodId
+          in: path
+          required: true
+          description: Identifier of the vectorization method
+          schema:
+            type: string
+            enum: [vtracer, opencv, potrace, inkscape, autotrace, primitive, svg-cleaner]
+      responses:
+        '200':
+          description: Method information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodInfoResponse'
+        '404':
+          description: Method not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Conversion Jobs
+  /convert:
+    post:
+      summary: Create conversion job
+      description: Create a new vectorization job for a previously uploaded file
+      operationId: createConversionJob
+      tags:
+        - Conversions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversionRequest'
+      responses:
+        '202':
+          description: Conversion job accepted and queued for processing
+          headers:
+            Location:
+              $ref: '#/components/headers/X-Request-Id'
+              description: URL to check job status
+              schema:
+                type: string
+                format: uri
+                example: '/api/convert/job_xyz789/status'
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /convert/batch:
+    post:
+      summary: Create batch conversion jobs
+      description: Create multiple vectorization jobs for batch processing
+      operationId: createBatchConversionJobs
+      tags:
+        - Conversions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchConversionRequest'
+      responses:
+        '202':
+          description: Batch conversion jobs accepted and queued for processing
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncBatchJobResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /convert/{jobId}:
+    get:
+      summary: Get job details
+      description: Retrieve complete information about a conversion job
+      operationId: getJobDetails
+      tags:
+        - Conversions
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Unique identifier of the conversion job
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetailsResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Cancel conversion job
+      description: Cancel a running or queued conversion job
+      operationId: cancelJob
+      tags:
+        - Conversions
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Unique identifier of the conversion job
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /convert/{jobId}/status:
+    get:
+      summary: Get job status
+      description: Get the current status and progress of a conversion job
+      operationId: getJobStatus
+      tags:
+        - Conversions
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Unique identifier of the conversion job
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /convert/{jobId}/result:
+    get:
+      summary: Download conversion result
+      description: Download the vectorized SVG file from a completed job
+      operationId: downloadJobResult
+      tags:
+        - Conversions
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Unique identifier of the conversion job
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SVG file download
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Job not completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Job or result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /convert/file/{fileId}:
+    get:
+      summary: Get jobs for file
+      description: Retrieve all conversion jobs for a specific file
+      operationId: getJobsForFile
+      tags:
+        - Conversions
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Unique identifier of the file
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Jobs for file retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileJobsResponse'
+  
+  /convert/status:
+    get:
+      summary: Get service status
+      description: Get overall service status and statistics
+      operationId: getServiceStatus
+      tags:
+        - Conversions
+      responses:
+        '200':
+          description: Service status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStatusResponse'
+
+components:
+  schemas:
+    # File schemas
+    FileUploadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Unique file identifier
+              example: "file_abc123"
+            originalName:
+              type: string
+              description: Original filename
+              example: "logo.png"
+            size:
+              type: integer
+              description: File size in bytes
+              example: 52428
+            mimetype:
+              type: string
+              description: MIME type of the file
+              example: "image/png"
+            metadata:
+              $ref: '#/components/schemas/ImageMetadata'
+    
+    BatchFileUploadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "file_abc123"
+              originalName:
+                type: string
+                example: "logo.png"
+              size:
+                type: integer
+                example: 52428
+              mimetype:
+                type: string
+                example: "image/png"
+              metadata:
+                $ref: '#/components/schemas/ImageMetadata'
+              error:
+                type: string
+                description: Error message if file failed to process
+    
+    FileInfoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "file_abc123"
+            originalName:
+              type: string
+              example: "logo.png"
+            filename:
+              type: string
+              example: "abc123_logo.png"
+            mimetype:
+              type: string
+              example: "image/png"
+            size:
+              type: integer
+              example: 52428
+            path:
+              type: string
+              example: "/uploads/abc123_logo.png"
+            metadata:
+              $ref: '#/components/schemas/ImageMetadata'
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-08-12T14:30:00Z"
+    
+    ImageMetadata:
+      type: object
+      properties:
+        width:
+          type: integer
+          description: Image width in pixels
+          example: 1024
+        height:
+          type: integer
+          description: Image height in pixels
+          example: 768
+        channels:
+          type: integer
+          description: Number of color channels
+          example: 3
+        colorSpace:
+          type: string
+          description: Color space of the image
+          example: "srgb"
+        hasAlpha:
+          type: boolean
+          description: Whether image has transparency
+          example: false
+        density:
+          type: number
+          description: Pixel density (DPI)
+          example: 72
+    
+    # Method schemas
+    MethodsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MethodInfo'
+    
+    MethodInfoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/MethodInfo'
+    
+    MethodInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Internal method identifier
+          example: "vtracer"
+        description:
+          type: string
+          description: Human-readable description
+          example: "VTracer - High-quality full-color vectorization"
+        category:
+          type: string
+          enum: [traditional, modern, artistic, utility]
+          description: Method category
+          example: "modern"
+        supportedFormats:
+          type: array
+          items:
+            type: string
+          description: Supported input formats
+          example: ["image/png", "image/jpeg", "image/bmp"]
+        requirements:
+          type: array
+          items:
+            type: string
+          description: System requirements
+          example: ["vtracer binary"]
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterDefinition'
+        performance:
+          $ref: '#/components/schemas/PerformanceInfo'
+    
+    ParameterDefinition:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "colorPrecision"
+        type:
+          type: string
+          enum: [number, string, boolean, select]
+          example: "number"
+        label:
+          type: string
+          example: "Color Precision"
+        description:
+          type: string
+          example: "Color precision (1-8, higher = more colors)"
+        default:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+          example: 6
+        min:
+          type: number
+          example: 1
+        max:
+          type: number
+          example: 8
+        step:
+          type: number
+          example: 1
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                oneOf:
+                  - type: string
+                  - type: number
+              label:
+                type: string
+    
+    PerformanceInfo:
+      type: object
+      properties:
+        speed:
+          type: string
+          enum: [fast, medium, slow]
+          example: "medium"
+        quality:
+          type: string
+          enum: [basic, good, excellent]
+          example: "excellent"
+        memoryUsage:
+          type: string
+          enum: [low, medium, high]
+          example: "medium"
+        bestFor:
+          type: array
+          items:
+            type: string
+          example: ["logos", "illustrations", "graphics"]
+    
+    # Conversion schemas
+    ConversionRequest:
+      type: object
+      required:
+        - fileId
+        - method
+      properties:
+        fileId:
+          type: string
+          description: ID of the uploaded file to convert
+          example: "file_abc123"
+        method:
+          type: string
+          description: Vectorization method to use
+          enum: [vtracer, opencv, potrace, inkscape, autotrace, primitive, svg-cleaner]
+          example: "vtracer"
+        parameters:
+          type: object
+          description: Method-specific parameters
+          additionalProperties: true
+          example:
+            colorPrecision: 6
+            layerDifference: 16
+            mode: "spline"
+            colorSpace: "rgb"
+    
+    BatchConversionRequest:
+      type: object
+      required:
+        - fileIds
+        - methods
+      properties:
+        fileIds:
+          type: array
+          items:
+            type: string
+          description: Array of file IDs to convert
+          example: ["file_abc123", "file_def456"]
+        methods:
+          type: array
+          items:
+            type: string
+            enum: [vtracer, opencv, potrace, inkscape, autotrace, primitive, svg-cleaner]
+          description: Array of vectorization methods
+          example: ["vtracer", "potrace"]
+        parameters:
+          type: object
+          description: Parameters to apply to all conversions
+          additionalProperties: true
+          example:
+            colorPrecision: 6
+            tolerance: 1.5
+    
+    JobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Job'
+    
+    AsyncJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Conversion job created and queued for processing"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "job_xyz789"
+            status:
+              type: string
+              enum: [queued, processing, completed, failed, cancelled]
+              example: "queued"
+            statusUrl:
+              type: string
+              format: uri
+              description: URL to check job status
+              example: "https://api.yourservice.com/v1/convert/job_xyz789/status"
+            estimatedTime:
+              type: integer
+              description: Estimated completion time in milliseconds
+              example: 5000
+        requestId:
+          type: string
+          description: Unique request identifier for tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+    
+    BatchJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            jobs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Job'
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  fileId:
+                    type: string
+                  method:
+                    type: string
+                  error:
+                    type: string
+    
+    AsyncBatchJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "5 conversion jobs created and queued for processing"
+        data:
+          type: object
+          properties:
+            jobs:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "job_xyz789"
+                  status:
+                    type: string
+                    enum: [queued, processing, completed, failed, cancelled]
+                    example: "queued"
+                  statusUrl:
+                    type: string
+                    format: uri
+                    description: URL to check job status
+                    example: "https://api.yourservice.com/v1/convert/job_xyz789/status"
+                  estimatedTime:
+                    type: integer
+                    description: Estimated completion time in milliseconds
+                    example: 5000
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  fileId:
+                    type: string
+                  method:
+                    type: string
+                  error:
+                    type: string
+            summary:
+              type: object
+              properties:
+                totalRequested:
+                  type: integer
+                  description: Total number of jobs requested
+                  example: 6
+                jobsCreated:
+                  type: integer
+                  description: Number of jobs successfully created
+                  example: 5
+                errors:
+                  type: integer
+                  description: Number of failed job creations
+                  example: 1
+        requestId:
+          type: string
+          description: Unique request identifier for tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+    
+    JobDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Job'
+    
+    JobStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "job_xyz789"
+            status:
+              type: string
+              enum: [queued, processing, completed, failed, cancelled]
+              example: "processing"
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+              example: 75
+            createdAt:
+              type: string
+              format: date-time
+              example: "2025-08-12T14:30:00Z"
+            startedAt:
+              type: string
+              format: date-time
+              example: "2025-08-12T14:31:00Z"
+            completedAt:
+              type: string
+              format: date-time
+              example: "2025-08-12T14:32:00Z"
+            estimatedTime:
+              type: integer
+              description: Estimated completion time in milliseconds
+              example: 5000
+            error:
+              type: string
+              description: Error message if job failed
+    
+    FileJobsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+    
+    ServiceStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            activeJobs:
+              type: integer
+              description: Number of currently active jobs
+              example: 3
+            availableConverters:
+              type: array
+              items:
+                type: string
+              description: List of available converter names
+              example: ["vtracer", "opencv", "potrace", "inkscape"]
+    
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique job identifier
+          example: "job_xyz789"
+        fileId:
+          type: string
+          description: ID of the input file
+          example: "file_abc123"
+        method:
+          type: string
+          description: Vectorization method used
+          example: "vtracer"
+        parameters:
+          type: object
+          description: Parameters used for conversion
+          additionalProperties: true
+        status:
+          type: string
+          enum: [queued, processing, completed, failed, cancelled]
+          example: "completed"
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 100
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-08-12T14:30:00Z"
+        startedAt:
+          type: string
+          format: date-time
+          example: "2025-08-12T14:31:00Z"
+        completedAt:
+          type: string
+          format: date-time
+          example: "2025-08-12T14:32:00Z"
+        estimatedTime:
+          type: integer
+          description: Estimated completion time in milliseconds
+          example: 5000
+        resultPath:
+          type: string
+          description: Path to result file (when completed)
+          example: "/outputs/job_xyz789.svg"
+        qualityMetrics:
+          $ref: '#/components/schemas/QualityMetrics'
+        error:
+          type: string
+          description: Error message if job failed
+    
+    QualityMetrics:
+      type: object
+      properties:
+        pathCount:
+          type: integer
+          description: Number of SVG paths generated
+          example: 45
+        pointCount:
+          type: integer
+          description: Number of control points
+          example: 180
+        fileSize:
+          type: integer
+          description: Output file size in bytes
+          example: 8192
+        processingTime:
+          type: integer
+          description: Processing time in milliseconds
+          example: 2500
+        accuracy:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Estimated accuracy score
+          example: 0.92
+        smoothness:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Path smoothness score
+          example: 0.88
+    
+    # Generic response schemas
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+        requestId:
+          type: string
+          description: Unique request identifier for tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+    
+    ErrorResponse:
+      type: object
+      description: "RFC 7807 Problem Details for HTTP APIs"
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI reference that identifies the problem type
+          example: "https://api.yourservice.com/problems/validation-error"
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+          example: "Validation Error"
+        status:
+          type: integer
+          description: The HTTP status code for this occurrence of the problem
+          example: 400
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence
+          example: "The 'fileId' parameter is required but was not provided"
+        instance:
+          type: string
+          format: uri
+          description: A URI reference that identifies the specific occurrence
+          example: "/api/convert"
+        requestId:
+          type: string
+          description: Unique request identifier for tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      required:
+        - type
+        - title
+        - status
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            type:
+              example: "https://api.yourservice.com/problems/validation-error"
+            title:
+              example: "Validation Error"
+            status:
+              example: 400
+            detail:
+              example: "fileId and method are required"
+            
+    NotFoundErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            type:
+              example: "https://api.yourservice.com/problems/resource-not-found"
+            title:
+              example: "Resource Not Found"
+            status:
+              example: 404
+            detail:
+              example: "The requested file was not found"
+              
+    FileTooLargeErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            type:
+              example: "https://api.yourservice.com/problems/file-too-large"
+            title:
+              example: "File Too Large"
+            status:
+              example: 413
+            detail:
+              example: "File size exceeds maximum allowed size of 10485760 bytes"
+              
+    InternalErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          properties:
+            type:
+              example: "https://api.yourservice.com/problems/internal-error"
+            title:
+              example: "Internal Server Error"
+            status:
+              example: 500
+            detail:
+              example: "An unexpected error occurred"
+
+    PaginatedFilesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUpload'
+        pagination:
+          type: object
+          properties:
+            limit:
+              type: integer
+              example: 20
+            cursor:
+              type: string
+              description: Current cursor
+              example: "eyJpZCI6ImZpbGVfMTIzIiwidXBsb2FkZWRfYXQiOiIyMDI1LTA4LTEyVDEwOjAwOjAwWiJ9"
+            nextCursor:
+              type: string
+              description: Cursor for next page
+              example: "eyJpZCI6ImZpbGVfNDU2IiwidXBsb2FkZWRfYXQiOiIyMDI1LTA4LTEyVDA5OjAwOjAwWiJ9"
+            prevCursor:
+              type: string
+              description: Cursor for previous page
+              example: "eyJpZCI6ImZpbGVfNzg5IiwidXBsb2FkZWRfYXQiOiIyMDI1LTA4LTEyVDExOjAwOjAwWiJ9"
+            hasNext:
+              type: boolean
+              description: Whether there are more items
+              example: true
+            hasPrev:
+              type: boolean
+              description: Whether there are previous items
+              example: false
+            total:
+              type: integer
+              description: Total number of items
+              example: 150
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              format: uri
+              description: Link to current page
+              example: "https://api.yourservice.com/v1/files?limit=20&sort=uploaded_at&order=desc"
+            next:
+              type: string
+              format: uri
+              description: Link to next page
+              example: "https://api.yourservice.com/v1/files?limit=20&cursor=eyJpZCI6ImZpbGVfNDU2In0%3D&sort=uploaded_at&order=desc"
+            prev:
+              type: string
+              format: uri
+              description: Link to previous page
+              example: "https://api.yourservice.com/v1/files?limit=20&cursor=eyJpZCI6ImZpbGVfNzg5In0%3D&sort=uploaded_at&order=desc"
+            first:
+              type: string
+              format: uri
+              description: Link to first page
+              example: "https://api.yourservice.com/v1/files?limit=20&sort=uploaded_at&order=desc"
+        requestId:
+          type: string
+          description: Unique request identifier for tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+  headers:
+    X-Request-Id:
+      description: Unique request identifier for tracing and debugging
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+  parameters:
+    X-Request-Id:
+      name: X-Request-Id
+      in: header
+      description: Optional request ID for tracing. If not provided, one will be generated.
+      required: false
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+tags:
+  - name: Files
+    description: File upload and management operations
+  - name: Methods
+    description: Vectorization method information
+  - name: Conversions
+    description: Conversion job operations

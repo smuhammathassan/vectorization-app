@@ -10,7 +10,8 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   
   res.json({
     success: true,
-    data: methods
+    data: methods,
+    requestId: req.requestId
   });
 }));
 
@@ -24,7 +25,8 @@ router.get('/:methodId', asyncHandler(async (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: method
+    data: method,
+    requestId: req.requestId
   });
 }));
 

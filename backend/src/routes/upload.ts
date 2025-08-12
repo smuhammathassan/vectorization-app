@@ -6,8 +6,35 @@ import { generateId, isValidImageFormat, sanitizeFilename } from '../../../share
 import { MAX_FILE_SIZE } from '../../../shared/constants';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { FileService } from '../services/FileService';
+import { paginationMiddleware, createPaginatedResponse } from '../utils/pagination';
+import { resourceETagMiddleware, generateStrongETag } from '../middleware/etag';
+import { uploadIdempotencyMiddleware } from '../middleware/idempotency';
 
 const router = Router();
+
+// List files with pagination
+router.get('/', paginationMiddleware, asyncHandler(async (req: Request, res: Response) => {
+  const fileService = new FileService();
+  const result = await fileService.getFilesPaginated(req.pagination!);
+  
+  const response = createPaginatedResponse(
+    result.files,
+    req.pagination!,
+    req,
+    {
+      hasNext: result.hasNext,
+      hasPrev: !!req.pagination!.cursor,
+      total: result.total,
+      nextCursor: result.nextCursor,
+      prevCursor: result.prevCursor
+    }
+  );
+
+  // Add requestId
+  (response as any).requestId = req.requestId;
+
+  res.json(response);
+}));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -38,7 +65,7 @@ const upload = multer({
 });
 
 // Upload single file
-router.post('/', upload.single('file'), asyncHandler(async (req: Request, res: Response) => {
+router.post('/', uploadIdempotencyMiddleware, upload.single('file'), asyncHandler(async (req: Request, res: Response) => {
   if (!req.file) {
     throw createError('No file provided', 400, 'NO_FILE');
   }
@@ -76,7 +103,8 @@ router.post('/', upload.single('file'), asyncHandler(async (req: Request, res: R
         size: fileData.size,
         mimetype: fileData.mimetype,
         metadata: fileData.metadata
-      }
+      },
+      requestId: req.requestId
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -85,7 +113,7 @@ router.post('/', upload.single('file'), asyncHandler(async (req: Request, res: R
 }));
 
 // Upload multiple files
-router.post('/batch', upload.array('files', 10), asyncHandler(async (req: Request, res: Response) => {
+router.post('/batch', uploadIdempotencyMiddleware, upload.array('files', 10), asyncHandler(async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
   
   if (!files || files.length === 0) {
@@ -138,7 +166,8 @@ router.post('/batch', upload.array('files', 10), asyncHandler(async (req: Reques
 
     res.json({
       success: true,
-      data: results
+      data: results,
+      requestId: req.requestId
     });
   } catch (error) {
     console.error('Batch upload error:', error);
@@ -146,20 +175,35 @@ router.post('/batch', upload.array('files', 10), asyncHandler(async (req: Reques
   }
 }));
 
-// Get file info
-router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
-  const fileService = new FileService();
-  const file = await fileService.getFile(req.params.id);
-  
-  if (!file) {
-    throw createError('File not found', 404, 'FILE_NOT_FOUND');
-  }
+// Get file info with ETag support
+router.get('/:id', 
+  resourceETagMiddleware(async (req) => {
+    const fileService = new FileService();
+    const file = await fileService.getFile(req.params.id);
+    if (!file) return null;
+    
+    // Generate ETag based on file ID and upload timestamp
+    const etag = generateStrongETag(file.id, file.uploadedAt.getTime().toString());
+    return {
+      etag,
+      lastModified: file.uploadedAt
+    };
+  }),
+  asyncHandler(async (req: Request, res: Response) => {
+    const fileService = new FileService();
+    const file = await fileService.getFile(req.params.id);
+    
+    if (!file) {
+      throw createError('File not found', 404, 'FILE_NOT_FOUND');
+    }
 
-  res.json({
-    success: true,
-    data: file
-  });
-}));
+    res.json({
+      success: true,
+      data: file,
+      requestId: req.requestId
+    });
+  })
+);
 
 // Download file
 router.get('/:id/download', asyncHandler(async (req: Request, res: Response) => {
@@ -196,7 +240,8 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   
   res.json({
     success: true,
-    message: 'File deleted successfully'
+    message: 'File deleted successfully',
+    requestId: req.requestId
   });
 }));
 
