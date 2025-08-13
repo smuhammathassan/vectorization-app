@@ -2,7 +2,6 @@ import { promisify } from 'util';
 import fs from 'fs';
 import { getDatabase } from '../config/database';
 import { FileUpload, ImageMetadata } from '../../../shared/types';
-import { PaginationParams, CursorPagination } from '../utils/pagination';
 
 const unlink = promisify(fs.unlink);
 
@@ -126,97 +125,6 @@ export class FileService {
         }
       });
     });
-  }
-
-  async getFilesPaginated(params: PaginationParams): Promise<{
-    files: FileUpload[];
-    hasNext: boolean;
-    nextCursor?: string;
-    prevCursor?: string;
-    total: number;
-  }> {
-    const { limit, cursor, sort = 'uploaded_at', order = 'desc' } = params;
-    
-    // Get total count
-    const countPromise = new Promise<number>((resolve, reject) => {
-      this.db.get('SELECT COUNT(*) as count FROM files', [], (err, row: any) => {
-        if (err) reject(err);
-        else resolve(row.count);
-      });
-    });
-
-    // Build where clause for cursor pagination
-    const { where, params: whereParams } = CursorPagination.createWhereClause(cursor, sort, order);
-    
-    // Build query
-    const orderClause = `ORDER BY ${sort} ${order.toUpperCase()}, id ${order.toUpperCase()}`;
-    const whereClause = where ? `WHERE ${where}` : '';
-    
-    const query = `
-      SELECT 
-        id, original_name, filename, mimetype, size, uploaded_at, path,
-        width, height, channels, color_space, has_alpha, density
-      FROM files 
-      ${whereClause}
-      ${orderClause}
-      LIMIT ?
-    `;
-
-    const queryParams = [...whereParams, limit + 1]; // +1 to check if there's a next page
-
-    const [total, rows] = await Promise.all([
-      countPromise,
-      new Promise<any[]>((resolve, reject) => {
-        this.db.all(query, queryParams, (err, rows: any[]) => {
-          if (err) reject(err);
-          else resolve(rows);
-        });
-      })
-    ]);
-
-    const hasNext = rows.length > limit;
-    if (hasNext) {
-      rows.pop(); // Remove the extra item
-    }
-
-    const files = rows.map(row => ({
-      id: row.id,
-      originalName: row.original_name,
-      filename: row.filename,
-      mimetype: row.mimetype,
-      size: row.size,
-      uploadedAt: new Date(row.uploaded_at),
-      path: row.path,
-      metadata: {
-        width: row.width,
-        height: row.height,
-        channels: row.channels,
-        colorSpace: row.color_space,
-        hasAlpha: row.has_alpha,
-        density: row.density
-      }
-    }));
-
-    let nextCursor: string | undefined;
-    let prevCursor: string | undefined;
-
-    if (hasNext && files.length > 0) {
-      const lastItem = files[files.length - 1];
-      nextCursor = CursorPagination.createCursor(lastItem, sort);
-    }
-
-    if (files.length > 0) {
-      const firstItem = files[0];
-      prevCursor = CursorPagination.createCursor(firstItem, sort);
-    }
-
-    return {
-      files,
-      hasNext,
-      nextCursor,
-      prevCursor,
-      total
-    };
   }
 
   async deleteFile(id: string): Promise<void> {

@@ -6,35 +6,8 @@ import { generateId, isValidImageFormat, sanitizeFilename } from '../../../share
 import { MAX_FILE_SIZE } from '../../../shared/constants';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { FileService } from '../services/FileService';
-import { paginationMiddleware, createPaginatedResponse } from '../utils/pagination';
-import { resourceETagMiddleware, generateStrongETag } from '../middleware/etag';
-import { uploadIdempotencyMiddleware } from '../middleware/idempotency';
 
 const router = Router();
-
-// List files with pagination
-router.get('/', paginationMiddleware, asyncHandler(async (req: Request, res: Response) => {
-  const fileService = new FileService();
-  const result = await fileService.getFilesPaginated(req.pagination!);
-  
-  const response = createPaginatedResponse(
-    result.files,
-    req.pagination!,
-    req,
-    {
-      hasNext: result.hasNext,
-      hasPrev: !!req.pagination!.cursor,
-      total: result.total,
-      nextCursor: result.nextCursor,
-      prevCursor: result.prevCursor
-    }
-  );
-
-  // Add requestId
-  (response as any).requestId = req.requestId;
-
-  res.json(response);
-}));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -65,7 +38,7 @@ const upload = multer({
 });
 
 // Upload single file
-router.post('/', uploadIdempotencyMiddleware, upload.single('file'), asyncHandler(async (req: Request, res: Response) => {
+router.post('/', upload.single('file'), asyncHandler(async (req: Request, res: Response) => {
   if (!req.file) {
     throw createError('No file provided', 400, 'NO_FILE');
   }
@@ -103,8 +76,7 @@ router.post('/', uploadIdempotencyMiddleware, upload.single('file'), asyncHandle
         size: fileData.size,
         mimetype: fileData.mimetype,
         metadata: fileData.metadata
-      },
-      requestId: req.requestId
+      }
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -113,7 +85,7 @@ router.post('/', uploadIdempotencyMiddleware, upload.single('file'), asyncHandle
 }));
 
 // Upload multiple files
-router.post('/batch', uploadIdempotencyMiddleware, upload.array('files', 10), asyncHandler(async (req: Request, res: Response) => {
+router.post('/batch', upload.array('files', 10), asyncHandler(async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
   
   if (!files || files.length === 0) {
@@ -166,8 +138,7 @@ router.post('/batch', uploadIdempotencyMiddleware, upload.array('files', 10), as
 
     res.json({
       success: true,
-      data: results,
-      requestId: req.requestId
+      data: results
     });
   } catch (error) {
     console.error('Batch upload error:', error);
@@ -175,35 +146,20 @@ router.post('/batch', uploadIdempotencyMiddleware, upload.array('files', 10), as
   }
 }));
 
-// Get file info with ETag support
-router.get('/:id', 
-  resourceETagMiddleware(async (req) => {
-    const fileService = new FileService();
-    const file = await fileService.getFile(req.params.id);
-    if (!file) return null;
-    
-    // Generate ETag based on file ID and upload timestamp
-    const etag = generateStrongETag(file.id, file.uploadedAt.getTime().toString());
-    return {
-      etag,
-      lastModified: file.uploadedAt
-    };
-  }),
-  asyncHandler(async (req: Request, res: Response) => {
-    const fileService = new FileService();
-    const file = await fileService.getFile(req.params.id);
-    
-    if (!file) {
-      throw createError('File not found', 404, 'FILE_NOT_FOUND');
-    }
+// Get file info
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const fileService = new FileService();
+  const file = await fileService.getFile(req.params.id);
+  
+  if (!file) {
+    throw createError('File not found', 404, 'FILE_NOT_FOUND');
+  }
 
-    res.json({
-      success: true,
-      data: file,
-      requestId: req.requestId
-    });
-  })
-);
+  res.json({
+    success: true,
+    data: file
+  });
+}));
 
 // Download file
 router.get('/:id/download', asyncHandler(async (req: Request, res: Response) => {
@@ -227,10 +183,57 @@ router.get('/:id/thumbnail', asyncHandler(async (req: Request, res: Response) =>
     throw createError('File not found', 404, 'FILE_NOT_FOUND');
   }
 
-  // For now, serve the original image
-  // TODO: Generate actual thumbnails using Sharp
+  // Generate thumbnail using Sharp
   const absolutePath = path.isAbsolute(file.path) ? file.path : path.resolve(file.path);
-  res.sendFile(absolutePath);
+  
+  try {
+    const thumbnail = await sharp(absolutePath)
+      .resize(150, 150, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(thumbnail);
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    // Fallback to original file
+    res.sendFile(absolutePath);
+  }
+}));
+
+// Get file preview (higher resolution for preview modal)
+router.get('/:id/preview', asyncHandler(async (req: Request, res: Response) => {
+  const fileService = new FileService();
+  const file = await fileService.getFile(req.params.id);
+  
+  if (!file) {
+    throw createError('File not found', 404, 'FILE_NOT_FOUND');
+  }
+
+  // Generate preview image using Sharp
+  const absolutePath = path.isAbsolute(file.path) ? file.path : path.resolve(file.path);
+  
+  try {
+    const preview = await sharp(absolutePath)
+      .resize(800, 800, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+    
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(preview);
+  } catch (error) {
+    console.error('Error generating preview:', error);
+    // Fallback to original file
+    res.sendFile(absolutePath);
+  }
 }));
 
 // Delete file
@@ -240,8 +243,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   
   res.json({
     success: true,
-    message: 'File deleted successfully',
-    requestId: req.requestId
+    message: 'File deleted successfully'
   });
 }));
 

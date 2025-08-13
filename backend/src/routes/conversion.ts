@@ -1,16 +1,14 @@
 import { Router, Request, Response } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { asyncHandler, createError } from '../middleware/errorHandler';
 import { validateConversionParams } from '../../../shared/utils';
 import { getConversionService } from '../services/ConversionServiceSingleton';
-import { paginationMiddleware, createPaginatedResponse } from '../utils/pagination';
-import { resourceETagMiddleware, generateStrongETag } from '../middleware/etag';
-import { conversionIdempotencyMiddleware } from '../middleware/idempotency';
 
 const router = Router();
 
 // Create conversion job
-router.post('/', conversionIdempotencyMiddleware, asyncHandler(async (req: Request, res: Response) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const { fileId, method, parameters = {} } = req.body;
 
   if (!fileId || !method) {
@@ -26,21 +24,9 @@ router.post('/', conversionIdempotencyMiddleware, asyncHandler(async (req: Reque
   try {
     const job = await getConversionService().createJob(fileId, method, parameters);
     
-    // Set Location header pointing to the job status endpoint
-    const statusUrl = `${req.protocol}://${req.get('host')}/api/convert/${job.id}/status`;
-    res.set('Location', statusUrl);
-    
-    // Return 202 Accepted for async operation
-    res.status(202).json({
+    res.json({
       success: true,
-      message: 'Conversion job created and queued for processing',
-      data: {
-        id: job.id,
-        status: job.status,
-        statusUrl: statusUrl,
-        estimatedTime: job.estimatedTime
-      },
-      requestId: req.requestId
+      data: job
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -50,43 +36,28 @@ router.post('/', conversionIdempotencyMiddleware, asyncHandler(async (req: Reque
   }
 }));
 
-// Get job status with ETag support
-router.get('/:jobId/status',
-  resourceETagMiddleware(async (req) => {
-    const job = await getConversionService().getJob(req.params.jobId);
-    if (!job) return null;
-    
-    // Generate ETag based on job ID, status, and progress
-    const etagData = `${job.id}-${job.status}-${job.progress}`;
-    const etag = generateStrongETag(etagData, job.startedAt?.getTime().toString());
-    return {
-      etag,
-      lastModified: job.startedAt || job.createdAt
-    };
-  }),
-  asyncHandler(async (req: Request, res: Response) => {
-    const job = await getConversionService().getJob(req.params.jobId);
-    
-    if (!job) {
-      throw createError('Job not found', 404, 'JOB_NOT_FOUND');
-    }
+// Get job status
+router.get('/:jobId/status', asyncHandler(async (req: Request, res: Response) => {
+  const job = await getConversionService().getJob(req.params.jobId);
+  
+  if (!job) {
+    throw createError('Job not found', 404, 'JOB_NOT_FOUND');
+  }
 
-    res.json({
-      success: true,
-      data: {
-        id: job.id,
-        status: job.status,
-        progress: job.progress,
-        createdAt: job.createdAt,
-        startedAt: job.startedAt,
-        completedAt: job.completedAt,
-        estimatedTime: job.estimatedTime,
-        error: job.error
-      },
-      requestId: req.requestId
-    });
-  })
-);
+  res.json({
+    success: true,
+    data: {
+      id: job.id,
+      status: job.status,
+      progress: job.progress,
+      createdAt: job.createdAt,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+      estimatedTime: job.estimatedTime,
+      error: job.error
+    }
+  });
+}));
 
 // Get job result
 router.get('/:jobId/result', asyncHandler(async (req: Request, res: Response) => {
@@ -108,6 +79,73 @@ router.get('/:jobId/result', asyncHandler(async (req: Request, res: Response) =>
   res.download(absolutePath, `converted_${job.id}.svg`);
 }));
 
+// Get job result stats
+router.get('/:jobId/stats', asyncHandler(async (req: Request, res: Response) => {
+  const job = await getConversionService().getJob(req.params.jobId);
+  
+  if (!job) {
+    throw createError('Job not found', 404, 'JOB_NOT_FOUND');
+  }
+
+  if (job.status !== 'completed') {
+    throw createError('Job not completed', 400, 'JOB_NOT_COMPLETED');
+  }
+
+  if (!job.resultPath) {
+    throw createError('Result file not found', 404, 'RESULT_NOT_FOUND');
+  }
+
+  try {
+    const absolutePath = path.isAbsolute(job.resultPath) ? job.resultPath : path.resolve(job.resultPath);
+    const stats = await fs.promises.stat(absolutePath);
+    
+    // For SVG files, try to extract additional metadata
+    let svgStats = {};
+    if (path.extname(absolutePath).toLowerCase() === '.svg') {
+      try {
+        const svgContent = await fs.promises.readFile(absolutePath, 'utf-8');
+        
+        // Extract viewBox dimensions
+        const viewBoxMatch = svgContent.match(/viewBox="([^"]*)"/);
+        if (viewBoxMatch) {
+          const [, x, y, width, height] = viewBoxMatch[1].split(/\s+/).map(Number);
+          svgStats = {
+            dimensions: { width, height },
+            viewBox: { x, y, width, height }
+          };
+        }
+        
+        // Count paths
+        const pathCount = (svgContent.match(/<path/g) || []).length;
+        const circleCount = (svgContent.match(/<circle/g) || []).length;
+        const rectCount = (svgContent.match(/<rect/g) || []).length;
+        const polygonCount = (svgContent.match(/<polygon/g) || []).length;
+        
+        svgStats = {
+          ...svgStats,
+          paths: pathCount + circleCount + rectCount + polygonCount,
+          pathElements: pathCount,
+          shapeElements: circleCount + rectCount + polygonCount
+        };
+      } catch (error) {
+        console.warn('Failed to parse SVG metadata:', error);
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        fileSize: stats.size,
+        createdAt: stats.birthtime,
+        modifiedAt: stats.mtime,
+        ...svgStats
+      }
+    });
+  } catch (error) {
+    throw createError('Failed to get file stats', 500, 'STATS_ERROR');
+  }
+}));
+
 // Get job details
 router.get('/:jobId', asyncHandler(async (req: Request, res: Response) => {
   const job = await getConversionService().getJob(req.params.jobId);
@@ -118,8 +156,7 @@ router.get('/:jobId', asyncHandler(async (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: job,
-    requestId: req.requestId
+    data: job
   });
 }));
 
@@ -129,8 +166,7 @@ router.delete('/:jobId', asyncHandler(async (req: Request, res: Response) => {
   
   res.json({
     success: true,
-    message: 'Job cancelled successfully',
-    requestId: req.requestId
+    message: 'Job cancelled successfully'
   });
 }));
 
@@ -140,13 +176,12 @@ router.get('/file/:fileId', asyncHandler(async (req: Request, res: Response) => 
   
   res.json({
     success: true,
-    data: jobs,
-    requestId: req.requestId
+    data: jobs
   });
 }));
 
 // Batch conversion
-router.post('/batch', conversionIdempotencyMiddleware, asyncHandler(async (req: Request, res: Response) => {
+router.post('/batch', asyncHandler(async (req: Request, res: Response) => {
   const { fileIds, methods, parameters = {} } = req.body;
 
   if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
@@ -176,25 +211,12 @@ router.post('/batch', conversionIdempotencyMiddleware, asyncHandler(async (req: 
       }
     }
 
-    // Return 202 Accepted for batch async operations
-    res.status(202).json({
+    res.json({
       success: true,
-      message: `${jobs.length} conversion jobs created and queued for processing`,
       data: {
-        jobs: jobs.map(job => ({
-          id: job.id,
-          status: job.status,
-          statusUrl: `${req.protocol}://${req.get('host')}/api/convert/${job.id}/status`,
-          estimatedTime: job.estimatedTime
-        })),
-        errors: errors.length > 0 ? errors : undefined,
-        summary: {
-          totalRequested: fileIds.length * methods.length,
-          jobsCreated: jobs.length,
-          errors: errors.length
-        }
-      },
-      requestId: req.requestId
+        jobs,
+        errors: errors.length > 0 ? errors : undefined
+      }
     });
   } catch (error) {
     throw createError('Batch conversion failed', 500, 'BATCH_CONVERSION_ERROR');
@@ -208,39 +230,8 @@ router.get('/status', asyncHandler(async (req: Request, res: Response) => {
     data: {
       activeJobs: getConversionService().getActiveJobsCount(),
       availableConverters: getConversionService().getAvailableConverters()
-    },
-    requestId: req.requestId
-  });
-}));
-
-// List all jobs with pagination
-router.get('/', paginationMiddleware, asyncHandler(async (req: Request, res: Response) => {
-  // For now, use the existing getAllJobs method (would need to be implemented)
-  // This is a placeholder - in a real implementation you'd add pagination to the service
-  const jobs = await getConversionService().getAllJobs();
-  
-  // Simple in-memory pagination for demonstration
-  const { limit, cursor } = req.pagination!;
-  const startIndex = cursor ? parseInt(Buffer.from(cursor, 'base64').toString()) : 0;
-  const endIndex = startIndex + limit;
-  const paginatedJobs = jobs.slice(startIndex, endIndex);
-  const hasNext = endIndex < jobs.length;
-  
-  const response = createPaginatedResponse(
-    paginatedJobs,
-    req.pagination!,
-    req,
-    {
-      hasNext,
-      hasPrev: startIndex > 0,
-      total: jobs.length,
-      nextCursor: hasNext ? Buffer.from(endIndex.toString()).toString('base64') : undefined,
-      prevCursor: startIndex > 0 ? Buffer.from(Math.max(0, startIndex - limit).toString()).toString('base64') : undefined
     }
-  );
-
-  (response as any).requestId = req.requestId;
-  res.json(response);
+  });
 }));
 
 export default router;

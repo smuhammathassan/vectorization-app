@@ -25,8 +25,13 @@
       "Bash(kill:*)",
       "Bash(rm:*)",
       "Bash(grep:*)",
+      "Bash(npm install:*)",
       "Bash(mkdir:*)",
-      "Bash(npm install:*)"
+      "Bash(sed:*)",
+      "Bash(npm:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

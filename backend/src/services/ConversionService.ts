@@ -343,40 +343,4 @@ export class ConversionService extends EventEmitter {
     }
     return converters;
   }
-
-  async getAllJobs(): Promise<ConversionJob[]> {
-    const query = `
-      SELECT 
-        id, file_id, method, parameters, status, progress, 
-        created_at, started_at, completed_at, estimated_time, 
-        result_path, error_message, quality_metrics 
-      FROM conversion_jobs 
-      ORDER BY created_at DESC
-    `;
-
-    return new Promise((resolve, reject) => {
-      this.db.all(query, [], (err, rows: any[]) => {
-        if (err) {
-          reject(err);
-        } else {
-          const jobs = rows.map(row => ({
-            id: row.id,
-            fileId: row.file_id,
-            method: row.method,
-            parameters: row.parameters ? JSON.parse(row.parameters) : {},
-            status: row.status as JobStatus,
-            progress: row.progress || 0,
-            createdAt: new Date(row.created_at),
-            startedAt: row.started_at ? new Date(row.started_at) : undefined,
-            completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
-            estimatedTime: row.estimated_time,
-            resultPath: row.result_path,
-            error: row.error_message,
-            qualityMetrics: row.quality_metrics ? JSON.parse(row.quality_metrics) : undefined
-          }));
-          resolve(jobs);
-        }
-      });
-    });
-  }
 }
